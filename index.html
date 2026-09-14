@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blue Ox Moving &mdash; Quote Calculator Prototype</title>
+<style>
+  :root{
+    --navy: #16283F;
+    --navy-2: #223C5C;
+    --steel: #45566E;
+    --amber: #E2963B;
+    --amber-dark: #C67A22;
+    --paper: #F6F8FB;
+    --card: #FFFFFF;
+    --line: #DCE3EC;
+    --success: #2F8F6B;
+    --radius: 14px;
+    font-size: 16px;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--paper);
+    color: var(--navy);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding: 40px 16px;
+  }
+  .display{
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+  }
+
+  .wrap{ width: 100%; max-width: 640px; }
+
+  /* ---- header / progress ---- */
+  .toolhead{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 18px;
+    padding: 0 4px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size: 17px;
+    color: var(--navy);
+  }
+  .brand .mark{
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--navy);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .brand .mark svg{ width:17px; height:17px; }
+  .steplabel{ font-size: 13px; color: var(--steel); }
+
+  .route{
+    position: relative;
+    height: 34px;
+    margin: 0 4px 28px;
+  }
+  .route .track{
+    position:absolute; top:16px; left:0; right:0; height:3px;
+    background: var(--line); border-radius: 2px;
+  }
+  .route .fill{
+    position:absolute; top:16px; left:0; height:3px;
+    background: var(--amber); border-radius: 2px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+  }
+  .route .truck{
+    position:absolute; top:-2px; transform: translateX(-50%);
+    transition: left .5s cubic-bezier(.4,0,.2,1);
+    font-size: 20px;
+    filter: drop-shadow(0 2px 3px rgba(22,40,63,.25));
+  }
+
+  /* ---- card ---- */
+  .card{
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: 0 20px 40px -18px rgba(22,40,63,.28);
+    padding: 34px 30px 26px;
+    min-height: 360px;
+    display:flex;
+    flex-direction:column;
+  }
+  .step{ display:none; flex-direction:column; flex:1; animation: rise .35s ease both; }
+  .step.active{ display:flex; }
+  @keyframes rise{ from{ opacity:0; transform: translateY(8px);} to{opacity:1; transform:none;} }
+
+  h1.q{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 25px;
+    line-height:1.25;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--navy);
+  }
+  p.sub{
+    margin: 0 0 22px;
+    color: var(--steel);
+    font-size: 14.5px;
+    line-height:1.5;
+    max-width: 46ch;
+  }
+
+  .tiles{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .tiles .tile{ flex: 1 1 calc(50% - 5px); }
+  .tiles.single .tile{ flex: 1 1 100%; }
+  .tile{
+    border: 1.5px solid var(--line);
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align:left;
+    cursor:pointer;
+    font-family:inherit;
+    font-size: 15px;
+    color: var(--navy);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    transition: border-color .15s, background .15s;
+    min-width: 200px;
+  }
+  .tile .ic{ font-size: 19px; line-height:1; }
+  .tile:hover{ border-color: #B9C6D6; }
+  .tile:focus-visible{ outline: 2px solid var(--navy-2); outline-offset:2px; }
+  .tile.selected{
+    border-color: var(--amber-dark);
+    background: #FEF6EA;
+  }
+  .tile .name{ font-weight: 550; }
+  .tile .hint{ display:block; font-size:12.5px; color:var(--steel); font-weight:400; margin-top:1px; }
+
+  .fields{ display:flex; flex-direction:column; gap:14px; max-width: 420px; }
+  label.f{ display:flex; flex-direction:column; gap:6px; font-size: 13.5px; color: var(--steel); }
+  label.f input{
+    font-family: inherit;
+    font-size: 15.5px;
+    color: var(--navy);
+    padding: 11px 13px;
+    border: 1.5px solid var(--line);
+    border-radius: 9px;
+    background:#fff;
+  }
+  label.f input:focus-visible{ outline: 2px solid var(--navy-2); outline-offset:1px; border-color: var(--navy-2); }
+  .err{ color:#B3401E; font-size:12.5px; min-height:16px; margin-top:-4px; }
+  label.optin{
+    display:flex; align-items:flex-start; gap:9px;
+    font-size: 13px; color: var(--steel); line-height:1.4; cursor:pointer;
+  }
+  label.optin input{ margin-top:2px; }
+
+  .sentnote{
+    font-size: 13px; color: var(--success); background:#EAF7F1;
+    border-radius: 9px; padding: 10px 14px; margin-bottom: 16px; width:100%;
+  }
+
+  .navrow{
+    margin-top: auto;
+    padding-top: 22px;
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    gap: 12px;
+  }
+  .btn{
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 9px;
+    padding: 12px 22px;
+    cursor:pointer;
+    border: none;
+  }
+  .btn.primary{ background: var(--navy); color:#fff; }
+  .btn.primary:hover{ background: var(--navy-2); }
+  .btn.primary:disabled{ background:#B7C1CE; cursor:not-allowed; }
+  .btn.ghost{ background:transparent; color: var(--steel); padding-left:6px; padding-right:6px; }
+  .btn.ghost:hover{ color: var(--navy); }
+  .btn:focus-visible{ outline:2px solid var(--navy-2); outline-offset:2px; }
+
+  /* ---- calculating ---- */
+  .calc-screen{ align-items:center; justify-content:center; text-align:center; gap:18px; }
+  .spinner-truck{ font-size: 46px; animation: bounce 1.1s ease-in-out infinite; }
+  @keyframes bounce{ 0%,100%{ transform: translateX(-6px);} 50%{ transform: translateX(6px);} }
+  .calc-screen p{ color: var(--steel); font-size:14.5px; }
+
+  /* ---- result ---- */
+  .result{ align-items:center; text-align:center; }
+  .result .badge{
+    font-size: 13px; color: var(--success); background:#EAF7F1;
+    border-radius: 20px; padding: 5px 14px; margin-bottom: 18px; font-weight:600;
+  }
+  .result .range{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 46px;
+    font-weight:600;
+    color: var(--navy);
+    line-height:1;
+    margin-bottom: 6px;
+  }
+  .result .rangesub{ color: var(--steel); font-size: 14px; margin-bottom: 22px; }
+  .result .factors{
+    text-align:left;
+    background: var(--paper);
+    border-radius: 10px;
+    padding: 16px 18px;
+    width:100%;
+    font-size: 13.5px;
+    color: var(--steel);
+    line-height:1.7;
+    margin-bottom: 22px;
+  }
+  .result .factors b{ color: var(--navy); }
+  .result .disclaimer{ font-size:12px; color:#8393A8; max-width:44ch; margin-bottom:20px; }
+
+  /* ---- thank you ---- */
+  .ty{ align-items:center; text-align:center; justify-content:center; gap:14px; }
+  .ty .check{
+    width:56px;height:56px;border-radius:50%;
+    background:#EAF7F1; color: var(--success);
+    display:flex; align-items:center; justify-content:center; font-size:28px;
+    margin-bottom: 6px;
+  }
+  .ty h1.q{ font-size: 23px; }
+
+  @media (max-width: 480px){
+    .tiles{ grid-template-columns: 1fr; }
+    .card{ padding: 26px 20px 22px; }
+    h1.q{ font-size:21px; }
+    .result .range{ font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="toolhead">
+    <div class="brand"><span class="mark"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 16V7a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v9M3 16h11M3 16v2a1 1 0 0 0 1 1h1M14 16v2a1 1 0 0 0 1 1h1m0 0a2 2 0 1 0 4 0m-4 0h4m2-6h-2v-3l2.2-2.2A1 1 0 0 1 21 6.5V13a1 1 0 0 1-1 1h-1M6 19a2 2 0 1 0 4 0" stroke="#F6F8FB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Blue Ox Moving &amp; Storage</div>
+    <div class="steplabel" id="stepLabel">Step 1 of 6</div>
+  </div>
+
+  <div class="route">
+    <div class="track"></div>
+    <div class="fill" id="routeFill"></div>
+    <div class="truck" id="routeTruck">&#128666;</div>
+  </div>
+
+  <div class="card" id="card">
+
+    <!-- Step 1: property type -->
+    <div class="step active" data-step="1">
+      <h1 class="q">What are you moving?</h1>
+      <p class="sub">This changes how we scope your estimate.</p>
+      <div class="tiles" id="tiles-propertytype">
+        <button class="tile" data-value="home"><span class="ic">&#127968;</span><span><span class="name">Home</span><span class="hint">A house, apartment, or condo</span></span></button>
+        <button class="tile" data-value="commercial"><span class="ic">&#127970;</span><span><span class="name">Office or commercial</span><span class="hint">A business, not a home</span></span></button>
+      </div>
+      <div class="navrow">
+        <span></span>
+        <button class="btn primary" id="next1" disabled>Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 2: move type -->
+    <div class="step" data-step="2">
+      <h1 class="q">Where's your move taking you?</h1>
+      <p class="sub">This is the single biggest factor in how your move is priced.</p>
+      <div class="tiles" id="tiles-movetype">
+        <button class="tile" data-value="local"><span class="ic">&#127968;</span><span><span class="name">Local move</span><span class="hint">Staying in the greater Houston area</span></span></button>
+        <button class="tile" data-value="long"><span class="ic">&#128506;&#65039;</span><span><span class="name">Long-distance move</span><span class="hint">Crossing state lines or 400+ miles</span></span></button>
+      </div>
+      <div class="navrow">
+        <button class="btn ghost" data-back="1">Back</button>
+        <button class="btn primary" id="next2" disabled>Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 3: size (content swapped by JS depending on property type) -->
+    <div class="step" data-step="3">
+      <h1 class="q" id="sizeHeading">What's the size of your place?</h1>
+      <p class="sub" id="sizeSub">A rough bedroom count is enough &mdash; we'll confirm exact details later.</p>
+      <div class="tiles" id="tiles-size">
+        <button class="tile" data-value="studio"><span class="ic">&#128716;</span><span class="name">Studio / 1 bed</span></button>
+        <button class="tile" data-value="2bed"><span class="ic">&#128716;</span><span class="name">2 bedrooms</span></button>
+        <button class="tile" data-value="3bed"><span class="ic">&#128716;</span><span class="name">3 bedrooms</span></button>
+        <button class="tile" data-value="4bed"><span class="ic">&#128716;</span><span class="name">4 bedrooms</span></button>
+        <button class="tile" data-value="5bed"><span class="ic">&#128716;</span><span class="name">5+ bedrooms</span></button>
+      </div>
+      <div class="navrow">
+        <button class="btn ghost" data-back="2">Back</button>
+        <button class="btn primary" id="next3" disabled>Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 4: services -->
+    <div class="step" data-step="4">
+      <h1 class="q">What do you need help with?</h1>
+      <p class="sub">Pick the option closest to what you're picturing.</p>
+      <div class="tiles single" id="tiles-services">
+        <button class="tile" data-value="move"><span class="ic">&#128230;</span><span><span class="name">Just the move</span><span class="hint">Loading, transport, and unloading</span></span></button>
+        <button class="tile" data-value="pack"><span class="ic">&#129513;</span><span><span class="name">Move + packing</span><span class="hint">We pack it, you don't touch a box</span></span></button>
+        <button class="tile" data-value="storage"><span class="ic">&#127959;&#65039;</span><span><span class="name">Move + packing + storage</span><span class="hint">Need somewhere to keep things in the meantime</span></span></button>
+      </div>
+      <div class="navrow">
+        <button class="btn ghost" data-back="3">Back</button>
+        <button class="btn primary" id="next4" disabled>Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 5: timeline -->
+    <div class="step" data-step="5">
+      <h1 class="q">When are you hoping to move?</h1>
+      <p class="sub">Ballpark is fine &mdash; you can lock in an exact date afterward.</p>
+      <div class="tiles single" id="tiles-timeline">
+        <button class="tile" data-value="2weeks"><span class="ic">&#9200;</span><span class="name">Within 2 weeks</span></button>
+        <button class="tile" data-value="6weeks"><span class="ic">&#128197;</span><span class="name">3&ndash;6 weeks out</span></button>
+        <button class="tile" data-value="3months"><span class="ic">&#128198;</span><span class="name">2&ndash;3 months out</span></button>
+        <button class="tile" data-value="research"><span class="ic">&#128269;</span><span class="name">Just researching</span></button>
+      </div>
+      <div class="navrow">
+        <button class="btn ghost" data-back="4">Back</button>
+        <button class="btn primary" id="next5" disabled>Continue</button>
+      </div>
+    </div>
+
+    <!-- Step 6: contact -->
+    <div class="step" data-step="6">
+      <h1 class="q">Where should we send your estimate?</h1>
+      <p class="sub">We'll confirm details before anything is booked &mdash; this doesn't commit you to anything.</p>
+      <div class="fields">
+        <label class="f">Full name
+          <input type="text" id="fName" autocomplete="name" placeholder="Jordan Rivera">
+        </label>
+        <label class="f">Phone number
+          <input type="tel" id="fPhone" autocomplete="tel" placeholder="(832) 555-0110">
+        </label>
+        <label class="f">Email address
+          <input type="email" id="fEmail" autocomplete="email" placeholder="jordan@email.com">
+        </label>
+        <label class="f">ZIP code you're moving from
+          <input type="text" id="fZip" inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="77041">
+        </label>
+        <label class="f">ZIP code you're moving to
+          <input type="text" id="fZipTo" inputmode="numeric" maxlength="5" placeholder="77494">
+        </label>
+        <label class="optin">
+          <input type="checkbox" id="fOptIn">
+          <span>It's okay to text me about my move (standard rates may apply)</span>
+        </label>
+        <div class="err" id="formErr"></div>
+      </div>
+      <div class="navrow">
+        <button class="btn ghost" data-back="5">Back</button>
+        <button class="btn primary" id="submitBtn">Get my estimate</button>
+      </div>
+    </div>
+
+    <!-- Calculating -->
+    <div class="step calc-screen" data-step="calc">
+      <div class="spinner-truck">&#128666;</div>
+      <p>Working out your estimate&hellip;</p>
+    </div>
+
+    <!-- Result -->
+    <div class="step result" data-step="result">
+      <div class="badge">Estimate ready</div>
+      <div class="range" id="resultRange">$0&ndash;$0</div>
+      <div class="rangesub" id="resultSub">estimated total for your move</div>
+      <div class="factors" id="resultFactors"></div>
+      <div class="disclaimer" id="resultDisclaimer">This is a ballpark estimate. Your final quote may vary once we confirm details.</div>
+      <p class="sentnote" id="sentNote">&#10003; Your details have already been sent to Blue Ox &mdash; a moving specialist will follow up soon.</p>
+      <button class="btn primary" id="finishBtn" style="width:100%;">Continue</button>
+    </div>
+
+    <!-- Thank you -->
+    <div class="step ty" data-step="ty">
+      <div class="check">&#10003;</div>
+      <h1 class="q">You're all set. We got this.</h1>
+      <p class="sub">A Blue Ox moving specialist will reach out within one business day &mdash; background-checked crew, GPS-tracked truck, and a rate that won't change once it's booked.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/*
+  ============================================================
+  PROTOTYPE ONLY — front-end demo, no real network requests.
+  ============================================================
+  Production integration notes for dev, based on SmartMoving's
+  actual published Lead API (help.smartmoving.com, "SmartMoving
+  Lead API Integration Guide" — verified Sep 2026):
+
+  ENDPOINT (real, documented, but do NOT call it from this browser
+  file directly in production):
+    POST https://api.smartmoving.com/api/leads/from-provider/v2?providerKey={provider_key}
+    Header: Content-Type: application/json
+    The provider key is account-specific and lets anyone submit leads
+    directly into Blue Ox's SmartMoving account — it must never be
+    embedded in client-side JavaScript, since anything in this file
+    ships to every visitor's browser and is visible via "View Source"
+    or dev tools. Instead: this calculator should POST to a small
+    server-side endpoint we control (serverless function or a script
+    on Blue Ox's own hosting), which holds the provider key as a
+    server-side environment variable and forwards the request to
+    SmartMoving from there. The browser never sees the key.
+
+  FIELD MAPPING — buildSmartMovingPayload() below builds the exact
+  JSON body using SmartMoving's real supported field names. Three
+  of our calculator's inputs do NOT have a clean 1:1 field in their
+  schema, so read the comments in buildSmartMovingPayload():
+    - local vs. long-distance has no dedicated field
+    - "move + packing + storage" has no single matching ServiceType
+    - our fuzzy timeline ("3-6 weeks out") isn't an exact MoveDate
+  All three are handled by writing a clear line into "notes" instead
+  of forcing bad data into the wrong field.
+
+  1) SUBMISSION: replace `fakeSubmitToSmartMoving()` with a real
+     fetch() POST to OUR OWN server-side relay endpoint (e.g.
+     POST /api/submit-move-lead), sending the object that
+     `buildSmartMovingPayload()` returns as the request body. That
+     server-side endpoint — not this file — holds the SmartMoving
+     provider key and makes the actual call to SmartMoving's API.
+     Also implement the "Best Practice" from SmartMoving's docs on
+     that server side: email a copy of every submission as a backup
+     in case the SmartMoving API call fails.
+
+  2) ERROR HANDLING: SmartMoving returns HTTP 400 for duplicate
+     submissions with a specific message — catch that and tell the
+     customer their info was already received, per their guidance.
+
+  3) REDIRECT: replace `showStep('ty')` in finishBtn's handler with
+     a real redirect once a destination URL exists, e.g.:
+       window.location.href = "/estimate-request-thank-you";
+
+  4) RATES: every number in ESTIMATE_RATES is a placeholder for
+     visual/UX purposes only. Replace with Blue Ox's real hourly
+     rate, crew-hours-per-home-size assumptions, and travel-fee
+     logic before this goes anywhere near production.
+
+  5) COMPLIANCE: the "It's okay to text me" checkbox maps to
+     SmartMoving's "UserOptIn" field, which their docs say is
+     recommended whenever you collect a phone number for texting.
+     Confirm the exact required wording with Blue Ox / legal per
+     SmartMoving's "Quote Form Opt-in Changes for 10DLC" article
+     before launch — the wording here is a placeholder, not
+     reviewed legal copy.
+  ============================================================
+*/
+
+// ---- PLACEHOLDER rate assumptions (replace with real Blue Ox numbers) ----
+const ESTIMATE_RATES = {
+  hourlyRate: 149,           // PLACEHOLDER: $/hr for a standard local crew
+  hoursBySize: {             // PLACEHOLDER: estimated on-site hours by home size
+    studio: 3, '2bed': 4.5, '3bed': 6, '4bed': 7.5, '5bed': 9.5
+  },
+  serviceMultiplier: {       // PLACEHOLDER: added time/cost for extra services
+    move: 1, pack: 1.35, storage: 1.5
+  },
+  travelFeeFlat: 120,        // PLACEHOLDER: flat mileage/travel fee, local moves only
+
+  // PLACEHOLDER: long-distance is priced by weight, not hours. These are
+  // widely-cited industry-average shipment weights by home size, and a
+  // widely-cited industry-average per-pound interstate rate range — not
+  // Blue Ox-specific numbers. Also assumes a typical ~1,000-mile move,
+  // since this calculator doesn't calculate real distance between ZIPs.
+  weightLbsBySize: {
+    studio: 2000, '2bed': 5000, '3bed': 7500, '4bed': 9000, '5bed': 12000
+  },
+  longDistanceRatePerLbLow: 0.50,
+  longDistanceRatePerLbHigh: 0.80,
+
+  // PLACEHOLDER: commercial moves scaled by space size instead of
+  // bedrooms, at a modestly higher rate to reflect more crew/equipment.
+  hoursByCommercialSize: { small: 5, medium: 9, large: 16 },
+  commercialRateMultiplier: 1.2
+};
+
+const state = { step: 1, answers: {} };
+
+/*
+  ATTRIBUTION CAPTURE — determines whether this visitor's original
+  entry to the site was organic search, paid search, paid social,
+  organic social, email, referral, or direct — using the entry
+  referrer and any UTM / click-ID parameters in the landing URL.
+
+  IMPORTANT for production: this capture snippet needs to run on
+  EVERY page of the site (e.g. included in the shared header/footer
+  template), not just on this calculator page. It writes to
+  sessionStorage exactly once per session, on first load — so if a
+  visitor reads a blog post first and reaches the calculator several
+  clicks later, we still credit their real first-touch source instead
+  of "your own site" as the referrer.
+
+  This is best-effort, not exact: some browsers/privacy settings
+  strip referrer data entirely, and those visits will fall into
+  "Direct / Unknown" even when they were genuinely organic. That's a
+  normal limitation of client-side attribution, not a bug.
+*/
+function captureAttributionOnce(){
+  if (sessionStorage.getItem('bx_attribution')) return; // already captured this session
+
+  const params = new URLSearchParams(window.location.search);
+  const utmSource = params.get('utm_source');
+  const utmMedium = params.get('utm_medium');
+  const hasPaidClickId = params.has('gclid') || params.has('msclkid') || params.has('fbclid');
+  const referrer = document.referrer || '';
+  const searchEngines = ['google.', 'bing.', 'yahoo.', 'duckduckgo.', 'baidu.'];
+  const socialDomains = ['facebook.', 'instagram.', 'twitter.', 'x.com', 'linkedin.', 'tiktok.'];
+
+  let bucket;
+  if (utmMedium === 'email'){
+    bucket = 'Email';
+  } else if (hasPaidClickId || utmMedium === 'cpc' || utmMedium === 'ppc' || utmMedium === 'paid'){
+    bucket = socialDomains.some(d => (utmSource || '').includes(d)) ? 'Paid Social' : 'Paid Search';
+  } else if (searchEngines.some(e => referrer.includes(e)) && !utmSource){
+    bucket = 'Organic Search';
+  } else if (socialDomains.some(d => referrer.includes(d))){
+    bucket = 'Organic Social';
+  } else if (referrer && !referrer.includes(window.location.hostname)){
+    bucket = 'Referral';
+  } else if (!referrer && !utmSource){
+    bucket = 'Direct';
+  } else {
+    bucket = 'Referral';
+  }
+
+  sessionStorage.setItem('bx_attribution', JSON.stringify({
+    bucket, referrer: referrer || null, utmSource: utmSource || null,
+    utmMedium: utmMedium || null, capturedAt: new Date().toISOString()
+  }));
+}
+captureAttributionOnce();
+
+function getAttribution(){
+  try {
+    return JSON.parse(sessionStorage.getItem('bx_attribution')) || { bucket: 'Direct' };
+  } catch(e){ return { bucket: 'Direct' }; }
+}
+
+const totalSteps = 6;
+const stepEls = {};
+document.querySelectorAll('.step').forEach(el => stepEls[el.dataset.step] = el);
+
+function showStep(key){
+  Object.values(stepEls).forEach(el => el.classList.remove('active'));
+  stepEls[key].classList.add('active');
+  if (!isNaN(key)) {
+    state.step = Number(key);
+    updateRoute(state.step);
+    document.getElementById('stepLabel').textContent = `Step ${state.step} of ${totalSteps}`;
+  }
+}
+
+function updateRoute(step){
+  const pct = ((step - 1) / (totalSteps - 1)) * 100;
+  document.getElementById('routeFill').style.width = pct + '%';
+  document.getElementById('routeTruck').style.left = pct + '%';
+}
+updateRoute(1);
+
+// Step 3 (size) shows different tiles depending on the Step 1 answer —
+// bedroom count doesn't mean anything for an office/commercial move, so
+// we swap both the question and the tile set rather than pretending a
+// residential question fits every move type.
+function renderSizeStep(){
+  const heading = document.getElementById('sizeHeading');
+  const sub = document.getElementById('sizeSub');
+  const container = document.getElementById('tiles-size');
+  document.getElementById('next3').disabled = true;
+  delete state.answers.homeSize;
+
+  if (state.answers.propertyType === 'commercial'){
+    heading.textContent = 'About how big is the space?';
+    sub.textContent = "Rough square footage is fine — we'll confirm exact details later.";
+    container.innerHTML = `
+      <button class="tile" data-value="small"><span class="ic">&#127970;</span><span class="name">Small &mdash; under 2,000 sq ft</span></button>
+      <button class="tile" data-value="medium"><span class="ic">&#127970;</span><span class="name">Medium &mdash; 2,000&ndash;10,000 sq ft</span></button>
+      <button class="tile" data-value="large"><span class="ic">&#127970;</span><span class="name">Large &mdash; 10,000+ sq ft</span></button>
+    `;
+  } else {
+    heading.textContent = "What's the size of your place?";
+    sub.textContent = "A rough bedroom count is enough — we'll confirm exact details later.";
+    container.innerHTML = `
+      <button class="tile" data-value="studio"><span class="ic">&#128716;</span><span class="name">Studio / 1 bed</span></button>
+      <button class="tile" data-value="2bed"><span class="ic">&#128716;</span><span class="name">2 bedrooms</span></button>
+      <button class="tile" data-value="3bed"><span class="ic">&#128716;</span><span class="name">3 bedrooms</span></button>
+      <button class="tile" data-value="4bed"><span class="ic">&#128716;</span><span class="name">4 bedrooms</span></button>
+      <button class="tile" data-value="5bed"><span class="ic">&#128716;</span><span class="name">5+ bedrooms</span></button>
+    `;
+  }
+  wireTiles('tiles-size', 'homeSize', 'next3');
+}
+
+// tile selection wiring
+function wireTiles(containerId, answerKey, nextBtnId){
+  const container = document.getElementById(containerId);
+  container.querySelectorAll('.tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      container.querySelectorAll('.tile').forEach(t => t.classList.remove('selected'));
+      tile.classList.add('selected');
+      state.answers[answerKey] = tile.dataset.value;
+      document.getElementById(nextBtnId).disabled = false;
+    });
+  });
+}
+wireTiles('tiles-propertytype', 'propertyType', 'next1');
+wireTiles('tiles-movetype', 'moveType', 'next2');
+wireTiles('tiles-services', 'services', 'next4');
+wireTiles('tiles-timeline', 'timeline', 'next5');
+
+document.getElementById('next1').addEventListener('click', () => showStep('2'));
+document.getElementById('next2').addEventListener('click', () => { renderSizeStep(); showStep('3'); });
+document.getElementById('next3').addEventListener('click', () => showStep('4'));
+document.getElementById('next4').addEventListener('click', () => showStep('5'));
+document.getElementById('next5').addEventListener('click', () => showStep('6'));
+document.querySelectorAll('[data-back]').forEach(btn => {
+  btn.addEventListener('click', () => showStep(btn.dataset.back));
+});
+
+// step 5 validation + submit
+document.getElementById('submitBtn').addEventListener('click', () => {
+  const name = document.getElementById('fName').value.trim();
+  const phone = document.getElementById('fPhone').value.trim();
+  const email = document.getElementById('fEmail').value.trim();
+  const zip = document.getElementById('fZip').value.trim();
+  const zipTo = document.getElementById('fZipTo').value.trim();
+  const optIn = document.getElementById('fOptIn').checked;
+  const errEl = document.getElementById('formErr');
+
+  if (!name || !phone || !email || !zip || !zipTo){
+    errEl.textContent = 'Please fill in all fields, including both ZIP codes.';
+    return;
+  }
+  if (!/^\S+@\S+\.\S+$/.test(email)){
+    errEl.textContent = 'That email doesn\u2019t look quite right.';
+    return;
+  }
+  if (!/^\d{5}$/.test(zip) || !/^\d{5}$/.test(zipTo)){
+    errEl.textContent = 'ZIP codes should be 5 digits.';
+    return;
+  }
+  errEl.textContent = '';
+  state.answers.name = name;
+  state.answers.phone = phone;
+  state.answers.email = email;
+  state.answers.zip = zip;
+  state.answers.zipTo = zipTo;
+  state.answers.optIn = optIn;
+
+  // The lead is submitted HERE — before the estimate is shown — so the
+  // customer's details reach Blue Ox regardless of whether they read
+  // their result, close the tab, or lose signal on the next screen.
+  showStep('calc');
+  const payload = buildSmartMovingPayload(state.answers);
+  fakeSubmitToSmartMoving(payload).then(() => {
+    renderResult();
+    showStep('result');
+  }).catch(() => {
+    // PRODUCTION: show a real inline error here and let them retry —
+    // see "Handling Errors" in SmartMoving's API guide, including the
+    // specific duplicate-submission (HTTP 400) case.
+    showStep('result');
+  });
+});
+
+// Builds the exact JSON body SmartMoving's Lead API expects, using their
+// real documented field names. This is what a production fetch() call
+// would send as the request body.
+function buildSmartMovingPayload(a){
+  const serviceTypeMap = {
+    move: 'Moving',
+    pack: 'MovingAndPacking',
+    // SmartMoving's ServiceType enum has no single "move + pack + storage"
+    // value, so we send the closest real value and note storage separately.
+    storage: 'MovingAndPacking'
+  };
+  const bedroomsMap = {
+    studio: '1', '2bed': '2', '3bed': '3', '4bed': '4', '5bed': '5+'
+  };
+  const commercialSizeLabel = {
+    small: 'Small (under 2,000 sq ft)', medium: 'Medium (2,000\u201310,000 sq ft)', large: 'Large (10,000+ sq ft)'
+  };
+  const timelineLabel = {
+    '2weeks': 'within 2 weeks', '6weeks': '3\u20136 weeks out',
+    '3months': '2\u20133 months out', research: 'just researching'
+  }[a.timeline];
+  const isCommercial = a.propertyType === 'commercial';
+
+  const notesParts = [
+    `Move type: ${a.moveType === 'long' ? 'Long-distance' : 'Local'}`,
+    `Timeline: ${timelineLabel}`
+  ];
+  if (a.services === 'storage') notesParts.push('Interested in storage in addition to packing/moving');
+  if (isCommercial){
+    // SmartMoving's ServiceType enum has "Commercial" as its own value,
+    // separate from Moving/Packing/MovingAndPacking — it can't represent
+    // "Commercial + Packing" at the same time, so the packing/storage
+    // preference from Step 4 goes into notes instead of being lost.
+    notesParts.push(`Requested service level: ${{move:'Move only', pack:'Move + packing', storage:'Move + packing + storage'}[a.services] || a.services}`);
+    notesParts.push(`Space size: ${commercialSizeLabel[a.homeSize] || a.homeSize}`);
+  }
+  notesParts.push('Lead source: Moving Cost Calculator (not the main estimate-request form)');
+
+  // Map our internal attribution bucket to the exact referral-source
+  // string SmartMoving should receive. NOTE: confirm with Blue Ox
+  // whether they already have referral sources configured under these
+  // (or similar) names in SmartMoving Settings > Sales > Referral
+  // Sources — if our string doesn't exactly match an existing one,
+  // SmartMoving auto-creates a new, separate entry rather than rolling
+  // into what they already track.
+  const attribution = getAttribution();
+  const referralSourceMap = {
+    'Organic Search': 'Website - Organic SEO',
+    'Paid Search': 'Website - Paid Search',
+    'Paid Social': 'Website - Paid Social',
+    'Organic Social': 'Website - Organic Social',
+    'Email': 'Website - Email',
+    'Referral': 'Website - Referral',
+    'Direct': 'Website - Direct'
+  };
+
+  const payload = {
+    fullName: a.name,
+    phoneNumber: a.phone,
+    email: a.email,
+    userOptIn: a.optIn ? 'true' : 'false',
+    originZip: a.zip,
+    destinationZip: a.zipTo,
+    serviceType: isCommercial ? 'Commercial' : serviceTypeMap[a.services],
+    referralSource: referralSourceMap[attribution.bucket] || 'Website - Direct',
+    notes: notesParts.join(' | ')
+    // MoveDate intentionally omitted: SmartMoving's own docs describe
+    // YYYYMMDD format but their own JSON sample shows "7/25/2020" —
+    // those two contradict each other, so confirm the real expected
+    // format with SmartMoving support before ever populating this
+    // field. Separately, our calculator only collects a fuzzy
+    // timeframe anyway, not an exact date, so it's captured in notes
+    // instead regardless of format.
+  };
+
+  // "Bedrooms" doesn't mean anything for a commercial move, so it's only
+  // sent for residential — the space-size tier goes into notes instead
+  // for commercial (see above).
+  if (!isCommercial) payload.bedrooms = bedroomsMap[a.homeSize];
+
+  // Native UTM fields SmartMoving supports directly — only sent if
+  // present, so organic/direct visits simply omit these rather than
+  // sending empty strings.
+  if (attribution.utmSource) payload.utmSource = attribution.utmSource;
+  if (attribution.utmMedium) payload.utmMedium = attribution.utmMedium;
+
+  return payload;
+}
+
+// PROTOTYPE ONLY: simulates the latency of a real API call and logs the
+// exact payload that would be sent. Replace the body of this function
+// with a real fetch() POST to the endpoint documented above.
+function fakeSubmitToSmartMoving(payload){
+  console.log('[prototype] would POST to SmartMoving:', payload);
+  return new Promise(resolve => setTimeout(resolve, 1400));
+}
+
+function renderResult(){
+  const { moveType, homeSize, services } = state.answers;
+  const isCommercial = state.answers.propertyType === 'commercial';
+  const rangeEl = document.getElementById('resultRange');
+  const subEl = document.getElementById('resultSub');
+  const factorsEl = document.getElementById('resultFactors');
+
+  const sizeLabel = {studio:'Studio / 1 bed', '2bed':'2 bedrooms', '3bed':'3 bedrooms', '4bed':'4 bedrooms', '5bed':'5+ bedrooms'}[homeSize];
+  const commercialSizeLabel = {small:'Small (under 2,000 sq ft)', medium:'Medium (2,000\u201310,000 sq ft)', large:'Large (10,000+ sq ft)'};
+  const serviceLabel = {move:'Moving only', pack:'Moving + packing', storage:'Moving + packing + storage'}[services];
+  const moveTypeLabel = moveType === 'long' ? 'Long-distance' : 'Local';
+
+  // Always try to show a real ballpark number. Only fall back to the
+  // "we'll follow up" message if something genuinely can't be computed
+  // (e.g. an unmapped answer) — this should be rare in normal use since
+  // every step is tile-based, not free text.
+  try {
+    let low, high, hoursNote;
+
+    if (isCommercial){
+      // NOTE: this simplified model doesn't scale commercial pricing by
+      // local vs. long-distance — real commercial/long-distance moves
+      // usually should. Flagging as a known simplification, not an
+      // oversight, since Blue Ox's real commercial rate structure will
+      // replace this placeholder math anyway.
+      const hours = ESTIMATE_RATES.hoursByCommercialSize[homeSize];
+      const mult = ESTIMATE_RATES.serviceMultiplier[services];
+      if (!hours || !mult) throw new Error('Missing commercial rate inputs');
+      const base = hours * ESTIMATE_RATES.hourlyRate * ESTIMATE_RATES.commercialRateMultiplier * mult;
+      low = Math.round((base + ESTIMATE_RATES.travelFeeFlat) * 0.9 / 10) * 10;
+      high = Math.round((base + ESTIMATE_RATES.travelFeeFlat) * 1.2 / 10) * 10;
+      hoursNote = `<div><b>Estimated crew time:</b> ~${hours} hours</div>`;
+    } else if (moveType === 'long'){
+      const weight = ESTIMATE_RATES.weightLbsBySize[homeSize];
+      const mult = ESTIMATE_RATES.serviceMultiplier[services];
+      if (!weight || !mult) throw new Error('Missing long-distance rate inputs');
+      low = Math.round(weight * ESTIMATE_RATES.longDistanceRatePerLbLow * mult / 10) * 10;
+      high = Math.round(weight * ESTIMATE_RATES.longDistanceRatePerLbHigh * mult / 10) * 10;
+      hoursNote = `<div><b>Estimated shipment weight:</b> ~${weight.toLocaleString()} lbs</div>`;
+    } else {
+      const hours = ESTIMATE_RATES.hoursBySize[homeSize];
+      const mult = ESTIMATE_RATES.serviceMultiplier[services];
+      if (!hours || !mult) throw new Error('Missing local rate inputs');
+      const base = hours * ESTIMATE_RATES.hourlyRate * mult;
+      low = Math.round((base + ESTIMATE_RATES.travelFeeFlat) * 0.9 / 10) * 10;
+      high = Math.round((base + ESTIMATE_RATES.travelFeeFlat) * 1.15 / 10) * 10;
+      hoursNote = `<div><b>Estimated crew time:</b> ~${hours} hours</div>`;
+    }
+
+    animateRange(rangeEl, low, high);
+    subEl.textContent = isCommercial
+      ? 'estimated total for your office/commercial move'
+      : (moveType === 'long' ? 'estimated total for your long-distance move' : 'estimated total for your local move');
+    factorsEl.innerHTML = `
+      <div><b>Move type:</b> ${moveTypeLabel}</div>
+      <div><b>${isCommercial ? 'Space size' : 'Home size'}:</b> ${isCommercial ? (commercialSizeLabel[homeSize] || homeSize) : sizeLabel}</div>
+      <div><b>Services:</b> ${serviceLabel}</div>
+      ${hoursNote}
+    `;
+    document.getElementById('resultDisclaimer').textContent = isCommercial
+      ? "This is a ballpark estimate based on typical office/commercial moves. We'll confirm exact scope during a walkthrough or virtual estimate."
+      : (moveType === 'long'
+        ? "This is a ballpark estimate based on typical shipment weights. Your final price is based on the actual weight once it's on the truck."
+        : "This is a ballpark estimate. Your final quote may vary once we confirm details \u2014 and once it's booked, your hourly rate is locked in, so there's no surprise charge later.");
+  } catch (err){
+    // Genuine fallback — should only trigger on an unexpected/unmapped
+    // answer combination, not in normal use.
+    console.error('[calculator] could not compute an estimate:', err);
+    rangeEl.textContent = "We'll follow up";
+    subEl.textContent = "this one needs a specialist's eye";
+    factorsEl.innerHTML = `
+      <div style="margin-top:0;">We couldn't calculate a ballpark for this combination automatically &mdash; it looks like a special quote. No worries: your details are already on their way, and a Blue Ox specialist will be in touch shortly with an exact number.</div>
+    `;
+    document.getElementById('resultDisclaimer').textContent = '';
+  }
+}
+
+function animateRange(el, low, high){
+  let frame = 0;
+  const frames = 20;
+  const timer = setInterval(() => {
+    frame++;
+    const l = Math.round(low * (frame/frames));
+    const h = Math.round(high * (frame/frames));
+    el.textContent = `$${l.toLocaleString()}\u2013$${h.toLocaleString()}`;
+    if (frame >= frames){
+      clearInterval(timer);
+      el.textContent = `$${low.toLocaleString()}\u2013$${high.toLocaleString()}`;
+    }
+  }, 35);
+}
+
+document.getElementById('finishBtn').addEventListener('click', () => {
+  // PRODUCTION: replace with a real redirect once a thank-you page
+  // URL exists, e.g. window.location.href = "/estimate-request-thank-you";
+  // The lead was already sent to SmartMoving back in the submitBtn
+  // handler, so this click is just "move on," not "submit."
+  showStep('ty');
+});
+</script>
+</body>
+</html>
