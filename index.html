@@ -215,7 +215,13 @@
     line-height:1;
     margin-bottom: 6px;
   }
-  .result .rangesub{ color: var(--steel); font-size: 14px; margin-bottom: 22px; }
+  .result .rangesub{ color: var(--steel); font-size: 14px; margin-bottom: 16px; }
+  .result .lowhigh{
+    display:flex; margin-bottom: 20px;
+  }
+  .result .lh-item{ display:flex; flex-direction:column; align-items:center; margin: 0 14px; }
+  .result .lh-label{ font-size:12px; color:var(--steel); text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px; }
+  .result .lh-value{ font-family:'Space Grotesk', sans-serif; font-size:19px; font-weight:600; color:var(--navy); }
   .result .factors{
     text-align:left;
     background: var(--paper);
@@ -381,8 +387,12 @@
     <!-- Result -->
     <div class="step result" data-step="result">
       <div class="badge">Estimate ready</div>
-      <div class="range" id="resultRange">$0&ndash;$0</div>
-      <div class="rangesub" id="resultSub">estimated total for your move</div>
+      <div class="range" id="resultRange">$0</div>
+      <div class="rangesub" id="resultSub">average estimate for your move</div>
+      <div class="lowhigh">
+        <div class="lh-item"><span class="lh-label">Low</span><span class="lh-value" id="resultLow">$0</span></div>
+        <div class="lh-item"><span class="lh-label">High</span><span class="lh-value" id="resultHigh">$0</span></div>
+      </div>
       <div class="factors" id="resultFactors"></div>
       <div class="disclaimer" id="resultDisclaimer">This is a ballpark estimate. Your final quote may vary once we confirm details.</div>
       <p class="sentnote" id="sentNote">&#10003; Your details have already been sent to Blue Ox &mdash; a moving specialist will follow up soon.</p>
@@ -465,32 +475,45 @@
   ============================================================
 */
 
-// ---- PLACEHOLDER rate assumptions (replace with real Blue Ox numbers) ----
+// ---- Real Blue Ox local rate structure (confirmed by client) ----
 const ESTIMATE_RATES = {
-  hourlyRate: 149,           // PLACEHOLDER: $/hr for a standard local crew
-  hoursBySize: {             // PLACEHOLDER: estimated on-site hours by home size
-    studio: 3, '2bed': 4.5, '3bed': 6, '4bed': 7.5, '5bed': 9.5
+  minimumHours: 3,           // 3-hour minimum applies to every local move
+  ratePerCrewSize: {         // $/hr by crew size — includes movers, truck, trip fee, and materials for Move only
+    2: 150, 3: 225, 4: 300
   },
-  serviceMultiplier: {       // PLACEHOLDER: added time/cost for extra services
-    move: 1, pack: 1.35, storage: 1.5
+  // Crew size and typical on-site hours by home size (client-provided ranges).
+  // Studio and 1BR share the same 2-3 hour range, so they're combined into
+  // one tile in the UI without losing accuracy.
+  localBySize: {
+    studio: { crew: 2, hoursLow: 2, hoursHigh: 3 },
+    '2bed':  { crew: 2, hoursLow: 3, hoursHigh: 4 },
+    '3bed':  { crew: 3, hoursLow: 6, hoursHigh: 8 },
+    '4bed':  { crew: 4, hoursLow: 8, hoursHigh: 12 },
+    '5bed':  { crew: 4, hoursLow: 10, hoursHigh: 14 }
   },
-  travelFeeFlat: 120,        // PLACEHOLDER: flat mileage/travel fee, local moves only
+  // PLACEHOLDER: client's numbers cover "Move only." No packing/storage
+  // rate was provided yet, so this multiplier is still an estimate —
+  // replace once Blue Ox gives us real packing/storage pricing.
+  serviceMultiplier: { move: 1, pack: 1.35, storage: 1.5 },
 
-  // PLACEHOLDER: long-distance is priced by weight, not hours. These are
-  // widely-cited industry-average shipment weights by home size, and a
-  // widely-cited industry-average per-pound interstate rate range — not
-  // Blue Ox-specific numbers. Also assumes a typical ~1,000-mile move,
-  // since this calculator doesn't calculate real distance between ZIPs.
+  // PLACEHOLDER: long-distance is priced by weight, not hours, and the
+  // client's numbers above only cover local moves. These weight and
+  // per-pound figures are still widely-cited industry averages, not
+  // Blue Ox-specific, pending real long-distance numbers from the client.
   weightLbsBySize: {
     studio: 2000, '2bed': 5000, '3bed': 7500, '4bed': 9000, '5bed': 12000
   },
   longDistanceRatePerLbLow: 0.50,
   longDistanceRatePerLbHigh: 0.80,
 
-  // PLACEHOLDER: commercial moves scaled by space size instead of
-  // bedrooms, at a modestly higher rate to reflect more crew/equipment.
-  hoursByCommercialSize: { small: 5, medium: 9, large: 16 },
-  commercialRateMultiplier: 1.2
+  // PLACEHOLDER: commercial pricing wasn't part of the client's numbers
+  // either. Reusing the same real local hourly rates by assigning a crew
+  // size per space-size tier, rather than inventing a separate rate.
+  commercialBySize: {
+    small:  { crew: 2, hoursLow: 3, hoursHigh: 5 },
+    medium: { crew: 3, hoursLow: 6, hoursHigh: 9 },
+    large:  { crew: 4, hoursLow: 10, hoursHigh: 16 }
+  }
 };
 
 const state = { step: 1, answers: {} };
@@ -665,6 +688,11 @@ document.getElementById('submitBtn').addEventListener('click', () => {
   state.answers.zipTo = zipTo;
   state.answers.optIn = optIn;
 
+  // Calculate the estimate FIRST, so the numbers shown to the customer
+  // are included in what gets sent to SmartMoving, not just raw inputs
+  // (the client asked for the displayed estimate to land in the CRM too).
+  calculateEstimate();
+
   // The lead is submitted HERE — before the estimate is shown — so the
   // customer's details reach Blue Ox regardless of whether they read
   // their result, close the tab, or lose signal on the next screen.
@@ -708,6 +736,14 @@ function buildSmartMovingPayload(a){
     `Move type: ${a.moveType === 'long' ? 'Long-distance' : 'Local'}`,
     `Timeline: ${timelineLabel}`
   ];
+  // Client asked for the estimate shown to the customer to also land in
+  // SmartMoving, not just the raw inputs — this is that number, exactly
+  // as displayed on the result screen (see renderResult / computeLocalRange).
+  if (a.estimateLow != null && a.estimateHigh != null){
+    notesParts.push(`Calculator estimate shown to customer: $${a.estimateLow.toLocaleString()} low / $${a.estimateAverage.toLocaleString()} average / $${a.estimateHigh.toLocaleString()} high`);
+  } else {
+    notesParts.push('Calculator could not compute an estimate for this combination (special-quote fallback shown to customer)');
+  }
   if (a.services === 'storage') notesParts.push('Interested in storage in addition to packing/moving');
   if (isCommercial){
     // SmartMoving's ServiceType enum has "Commercial" as its own value,
@@ -778,75 +814,98 @@ function fakeSubmitToSmartMoving(payload){
   return new Promise(resolve => setTimeout(resolve, 1400));
 }
 
-function renderResult(){
+function computeLocalRange(sizeTable, homeSize, services){
+  const cfg = sizeTable[homeSize];
+  const mult = ESTIMATE_RATES.serviceMultiplier[services];
+  if (!cfg || !mult) throw new Error('Missing rate inputs for this size/service combo');
+  const rate = ESTIMATE_RATES.ratePerCrewSize[cfg.crew];
+  const billableLow = Math.max(cfg.hoursLow, ESTIMATE_RATES.minimumHours);
+  const billableHigh = Math.max(cfg.hoursHigh, ESTIMATE_RATES.minimumHours);
+  const low = Math.round(billableLow * rate * mult / 10) * 10;
+  const high = Math.round(billableHigh * rate * mult / 10) * 10;
+  const average = Math.round((low + high) / 2 / 10) * 10;
+  return { low, average, high, crew: cfg.crew, hoursLow: billableLow, hoursHigh: billableHigh };
+}
+
+// Pure calculation — no DOM. Runs BEFORE the SmartMoving payload is built,
+// so the calculated numbers can be included in what gets sent to the CRM,
+// not just the raw inputs. Stores results on state.answers; returns them
+// too for convenience.
+function calculateEstimate(){
   const { moveType, homeSize, services } = state.answers;
   const isCommercial = state.answers.propertyType === 'commercial';
-  const rangeEl = document.getElementById('resultRange');
-  const subEl = document.getElementById('resultSub');
-  const factorsEl = document.getElementById('resultFactors');
-
-  const sizeLabel = {studio:'Studio / 1 bed', '2bed':'2 bedrooms', '3bed':'3 bedrooms', '4bed':'4 bedrooms', '5bed':'5+ bedrooms'}[homeSize];
-  const commercialSizeLabel = {small:'Small (under 2,000 sq ft)', medium:'Medium (2,000\u201310,000 sq ft)', large:'Large (10,000+ sq ft)'};
-  const serviceLabel = {move:'Moving only', pack:'Moving + packing', storage:'Moving + packing + storage'}[services];
-  const moveTypeLabel = moveType === 'long' ? 'Long-distance' : 'Local';
-
-  // Always try to show a real ballpark number. Only fall back to the
-  // "we'll follow up" message if something genuinely can't be computed
-  // (e.g. an unmapped answer) — this should be rare in normal use since
-  // every step is tile-based, not free text.
   try {
-    let low, high, hoursNote;
-
+    let low, average, high, hoursLabel;
     if (isCommercial){
-      // NOTE: this simplified model doesn't scale commercial pricing by
-      // local vs. long-distance — real commercial/long-distance moves
-      // usually should. Flagging as a known simplification, not an
-      // oversight, since Blue Ox's real commercial rate structure will
-      // replace this placeholder math anyway.
-      const hours = ESTIMATE_RATES.hoursByCommercialSize[homeSize];
-      const mult = ESTIMATE_RATES.serviceMultiplier[services];
-      if (!hours || !mult) throw new Error('Missing commercial rate inputs');
-      const base = hours * ESTIMATE_RATES.hourlyRate * ESTIMATE_RATES.commercialRateMultiplier * mult;
-      low = Math.round((base + ESTIMATE_RATES.travelFeeFlat) * 0.9 / 10) * 10;
-      high = Math.round((base + ESTIMATE_RATES.travelFeeFlat) * 1.2 / 10) * 10;
-      hoursNote = `<div><b>Estimated crew time:</b> ~${hours} hours</div>`;
+      const r = computeLocalRange(ESTIMATE_RATES.commercialBySize, homeSize, services);
+      low = r.low; average = r.average; high = r.high;
+      hoursLabel = `${r.crew} movers, ~${r.hoursLow}\u2013${r.hoursHigh} hours`;
     } else if (moveType === 'long'){
       const weight = ESTIMATE_RATES.weightLbsBySize[homeSize];
       const mult = ESTIMATE_RATES.serviceMultiplier[services];
       if (!weight || !mult) throw new Error('Missing long-distance rate inputs');
       low = Math.round(weight * ESTIMATE_RATES.longDistanceRatePerLbLow * mult / 10) * 10;
       high = Math.round(weight * ESTIMATE_RATES.longDistanceRatePerLbHigh * mult / 10) * 10;
-      hoursNote = `<div><b>Estimated shipment weight:</b> ~${weight.toLocaleString()} lbs</div>`;
+      average = Math.round((low + high) / 2 / 10) * 10;
+      hoursLabel = `~${weight.toLocaleString()} lbs`;
     } else {
-      const hours = ESTIMATE_RATES.hoursBySize[homeSize];
-      const mult = ESTIMATE_RATES.serviceMultiplier[services];
-      if (!hours || !mult) throw new Error('Missing local rate inputs');
-      const base = hours * ESTIMATE_RATES.hourlyRate * mult;
-      low = Math.round((base + ESTIMATE_RATES.travelFeeFlat) * 0.9 / 10) * 10;
-      high = Math.round((base + ESTIMATE_RATES.travelFeeFlat) * 1.15 / 10) * 10;
-      hoursNote = `<div><b>Estimated crew time:</b> ~${hours} hours</div>`;
+      const r = computeLocalRange(ESTIMATE_RATES.localBySize, homeSize, services);
+      low = r.low; average = r.average; high = r.high;
+      hoursLabel = `${r.crew} movers, ~${r.hoursLow}\u2013${r.hoursHigh} hours (3-hour minimum applies)`;
     }
+    state.answers.estimateLow = low;
+    state.answers.estimateAverage = average;
+    state.answers.estimateHigh = high;
+    state.answers.estimateDetail = hoursLabel;
+    return { ok: true, low, average, high, hoursLabel };
+  } catch (err){
+    console.error('[calculator] could not compute an estimate:', err);
+    state.answers.estimateLow = null;
+    state.answers.estimateAverage = null;
+    state.answers.estimateHigh = null;
+    state.answers.estimateDetail = null;
+    return { ok: false };
+  }
+}
 
-    animateRange(rangeEl, low, high);
+// Pure display — reads the numbers calculateEstimate() already stored on
+// state.answers and renders them. Does not recalculate anything.
+function renderResult(){
+  const { moveType, homeSize, services, estimateLow, estimateAverage, estimateHigh, estimateDetail } = state.answers;
+  const isCommercial = state.answers.propertyType === 'commercial';
+  const rangeEl = document.getElementById('resultRange');
+  const subEl = document.getElementById('resultSub');
+  const factorsEl = document.getElementById('resultFactors');
+  const lowEl = document.getElementById('resultLow');
+  const highEl = document.getElementById('resultHigh');
+
+  const sizeLabel = {studio:'Studio / 1 bed', '2bed':'2 bedrooms', '3bed':'3 bedrooms', '4bed':'4 bedrooms', '5bed':'5+ bedrooms'}[homeSize];
+  const commercialSizeLabel = {small:'Small (under 2,000 sq ft)', medium:'Medium (2,000\u201310,000 sq ft)', large:'Large (10,000+ sq ft)'};
+  const serviceLabel = {move:'Moving only', pack:'Moving + packing', storage:'Moving + packing + storage'}[services];
+  const moveTypeLabel = moveType === 'long' ? 'Long-distance' : 'Local';
+
+  if (estimateLow != null){
+    animateAverage(rangeEl, estimateAverage);
+    lowEl.textContent = '$' + estimateLow.toLocaleString();
+    highEl.textContent = '$' + estimateHigh.toLocaleString();
     subEl.textContent = isCommercial
-      ? 'estimated total for your office/commercial move'
-      : (moveType === 'long' ? 'estimated total for your long-distance move' : 'estimated total for your local move');
+      ? 'average estimate for your office/commercial move'
+      : (moveType === 'long' ? 'average estimate for your long-distance move' : 'average estimate for your local move');
     factorsEl.innerHTML = `
       <div><b>Move type:</b> ${moveTypeLabel}</div>
       <div><b>${isCommercial ? 'Space size' : 'Home size'}:</b> ${isCommercial ? (commercialSizeLabel[homeSize] || homeSize) : sizeLabel}</div>
       <div><b>Services:</b> ${serviceLabel}</div>
-      ${hoursNote}
+      <div><b>${moveType === 'long' && !isCommercial ? 'Estimated shipment weight' : 'Estimated crew'}:</b> ${estimateDetail}</div>
     `;
     document.getElementById('resultDisclaimer').textContent = isCommercial
       ? "This is a ballpark estimate based on typical office/commercial moves. We'll confirm exact scope during a walkthrough or virtual estimate."
       : (moveType === 'long'
         ? "This is a ballpark estimate based on typical shipment weights. Your final price is based on the actual weight once it's on the truck."
         : "This is a ballpark estimate. Your final quote may vary once we confirm details \u2014 and once it's booked, your hourly rate is locked in, so there's no surprise charge later.");
-  } catch (err){
-    // Genuine fallback — should only trigger on an unexpected/unmapped
-    // answer combination, not in normal use.
-    console.error('[calculator] could not compute an estimate:', err);
+  } else {
     rangeEl.textContent = "We'll follow up";
+    lowEl.textContent = '';
+    highEl.textContent = '';
     subEl.textContent = "this one needs a specialist's eye";
     factorsEl.innerHTML = `
       <div style="margin-top:0;">We couldn't calculate a ballpark for this combination automatically &mdash; it looks like a special quote. No worries: your details are already on their way, and a Blue Ox specialist will be in touch shortly with an exact number.</div>
@@ -855,17 +914,16 @@ function renderResult(){
   }
 }
 
-function animateRange(el, low, high){
+function animateAverage(el, value){
   let frame = 0;
   const frames = 20;
   const timer = setInterval(() => {
     frame++;
-    const l = Math.round(low * (frame/frames));
-    const h = Math.round(high * (frame/frames));
-    el.textContent = `$${l.toLocaleString()}\u2013$${h.toLocaleString()}`;
+    const v = Math.round(value * (frame/frames));
+    el.textContent = `$${v.toLocaleString()}`;
     if (frame >= frames){
       clearInterval(timer);
-      el.textContent = `$${low.toLocaleString()}\u2013$${high.toLocaleString()}`;
+      el.textContent = `$${value.toLocaleString()}`;
     }
   }, 35);
 }
