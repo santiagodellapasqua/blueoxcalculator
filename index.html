@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blue Ox Moving &mdash; Quote Calculator Prototype</title>
+<title>Blue Ox Moving &mdash; Quote Calculator</title>
 <style>
   :root{
     --navy: #16283F;
@@ -30,140 +30,74 @@
     justify-content:center;
     padding: 40px 16px;
   }
-  .display{
-    font-family: 'Space Grotesk', 'Inter', sans-serif;
-  }
-
   .wrap{ width: 100%; max-width: 640px; }
 
-  /* ---- header / progress ---- */
   .toolhead{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom: 18px;
-    padding: 0 4px;
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 18px; padding: 0 4px;
   }
   .brand{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-family:'Space Grotesk', sans-serif;
-    font-weight:600;
-    font-size: 17px;
-    color: var(--navy);
+    display:flex; align-items:center; gap:10px;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size: 17px; color: var(--navy);
   }
   .brand .mark{
-    width: 30px; height: 30px;
-    border-radius: 8px;
-    background: var(--navy);
+    width: 30px; height: 30px; border-radius: 8px; background: var(--navy);
     display:flex; align-items:center; justify-content:center;
   }
   .brand .mark svg{ width:17px; height:17px; }
   .steplabel{ font-size: 13px; color: var(--steel); }
 
-  .route{
-    position: relative;
-    height: 34px;
-    margin: 0 4px 28px;
-  }
-  .route .track{
-    position:absolute; top:16px; left:0; right:0; height:3px;
-    background: var(--line); border-radius: 2px;
-  }
+  .route{ position: relative; height: 34px; margin: 0 4px 28px; }
+  .route .track{ position:absolute; top:16px; left:0; right:0; height:3px; background: var(--line); border-radius: 2px; }
   .route .fill{
-    position:absolute; top:16px; left:0; height:3px;
-    background: var(--amber); border-radius: 2px;
+    position:absolute; top:16px; left:0; height:3px; background: var(--amber); border-radius: 2px;
     transition: width .5s cubic-bezier(.4,0,.2,1);
   }
   .route .truck{
     position:absolute; top:-2px; transform: translateX(-50%);
     transition: left .5s cubic-bezier(.4,0,.2,1);
-    font-size: 20px;
-    filter: drop-shadow(0 2px 3px rgba(22,40,63,.25));
+    font-size: 20px; filter: drop-shadow(0 2px 3px rgba(22,40,63,.25));
   }
 
-  /* ---- card ---- */
   .card{
-    background: var(--card);
-    border-radius: var(--radius);
+    background: var(--card); border-radius: var(--radius);
     box-shadow: 0 20px 40px -18px rgba(22,40,63,.28);
-    padding: 34px 30px 26px;
-    min-height: 360px;
-    display:flex;
-    flex-direction:column;
+    padding: 34px 30px 26px; min-height: 360px; display:flex; flex-direction:column;
   }
   .step{ display:none; flex-direction:column; flex:1; animation: rise .35s ease both; }
   .step.active{ display:flex; }
   @keyframes rise{ from{ opacity:0; transform: translateY(8px);} to{opacity:1; transform:none;} }
 
   h1.q{
-    font-family:'Space Grotesk', sans-serif;
-    font-size: 25px;
-    line-height:1.25;
-    font-weight: 600;
-    margin: 0 0 6px;
-    color: var(--navy);
+    font-family:'Space Grotesk', sans-serif; font-size: 25px; line-height:1.25;
+    font-weight: 600; margin: 0 0 6px; color: var(--navy);
   }
-  p.sub{
-    margin: 0 0 22px;
-    color: var(--steel);
-    font-size: 14.5px;
-    line-height:1.5;
-    max-width: 46ch;
-  }
+  p.sub{ margin: 0 0 22px; color: var(--steel); font-size: 14.5px; line-height:1.5; max-width: 46ch; }
 
-  .tiles{
-    display:flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 6px;
-  }
+  .tiles{ display:flex; flex-wrap: wrap; gap: 10px; margin-bottom: 6px; }
   .tiles .tile{ flex: 1 1 calc(50% - 5px); }
   .tiles.single .tile{ flex: 1 1 100%; }
   .tile{
-    border: 1.5px solid var(--line);
-    background: #fff;
-    border-radius: 10px;
-    padding: 14px 16px;
-    text-align:left;
-    cursor:pointer;
-    font-family:inherit;
-    font-size: 15px;
-    color: var(--navy);
-    display:flex;
-    align-items:center;
-    gap:10px;
-    transition: border-color .15s, background .15s;
-    min-width: 200px;
+    border: 1.5px solid var(--line); background: #fff; border-radius: 10px; padding: 14px 16px;
+    text-align:left; cursor:pointer; font-family:inherit; font-size: 15px; color: var(--navy);
+    display:flex; align-items:center; gap:10px; transition: border-color .15s, background .15s; min-width: 200px;
   }
   .tile .ic{ font-size: 19px; line-height:1; }
   .tile:hover{ border-color: #B9C6D6; }
   .tile:focus-visible{ outline: 2px solid var(--navy-2); outline-offset:2px; }
-  .tile.selected{
-    border-color: var(--amber-dark);
-    background: #FEF6EA;
-  }
+  .tile.selected{ border-color: var(--amber-dark); background: #FEF6EA; }
   .tile .name{ font-weight: 550; }
   .tile .hint{ display:block; font-size:12.5px; color:var(--steel); font-weight:400; margin-top:1px; }
 
   .fields{ display:flex; flex-direction:column; gap:14px; max-width: 420px; }
   label.f{ display:flex; flex-direction:column; gap:6px; font-size: 13.5px; color: var(--steel); }
   label.f input{
-    font-family: inherit;
-    font-size: 15.5px;
-    color: var(--navy);
-    padding: 11px 13px;
-    border: 1.5px solid var(--line);
-    border-radius: 9px;
-    background:#fff;
+    font-family: inherit; font-size: 15.5px; color: var(--navy); padding: 11px 13px;
+    border: 1.5px solid var(--line); border-radius: 9px; background:#fff;
   }
   label.f input:focus-visible{ outline: 2px solid var(--navy-2); outline-offset:1px; border-color: var(--navy-2); }
   .err{ color:#B3401E; font-size:12.5px; min-height:16px; margin-top:-4px; }
-  label.optin{
-    display:flex; align-items:flex-start; gap:9px;
-    font-size: 13px; color: var(--steel); line-height:1.4; cursor:pointer;
-  }
+  label.optin{ display:flex; align-items:flex-start; gap:9px; font-size: 13px; color: var(--steel); line-height:1.4; cursor:pointer; }
   label.optin input{ margin-top:2px; }
 
   .sentnote{
@@ -171,22 +105,10 @@
     border-radius: 9px; padding: 10px 14px; margin-bottom: 16px; width:100%;
   }
 
-  .navrow{
-    margin-top: auto;
-    padding-top: 22px;
-    display:flex;
-    justify-content: space-between;
-    align-items:center;
-    gap: 12px;
-  }
+  .navrow{ margin-top: auto; padding-top: 22px; display:flex; justify-content: space-between; align-items:center; gap: 12px; }
   .btn{
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 600;
-    border-radius: 9px;
-    padding: 12px 22px;
-    cursor:pointer;
-    border: none;
+    font-family: inherit; font-size: 15px; font-weight: 600; border-radius: 9px;
+    padding: 12px 22px; cursor:pointer; border: none;
   }
   .btn.primary{ background: var(--navy); color:#fff; }
   .btn.primary:hover{ background: var(--navy-2); }
@@ -195,62 +117,54 @@
   .btn.ghost:hover{ color: var(--navy); }
   .btn:focus-visible{ outline:2px solid var(--navy-2); outline-offset:2px; }
 
-  /* ---- calculating ---- */
   .calc-screen{ align-items:center; justify-content:center; text-align:center; gap:18px; }
   .spinner-truck{ font-size: 46px; animation: bounce 1.1s ease-in-out infinite; }
   @keyframes bounce{ 0%,100%{ transform: translateX(-6px);} 50%{ transform: translateX(6px);} }
   .calc-screen p{ color: var(--steel); font-size:14.5px; }
 
-  /* ---- result ---- */
   .result{ align-items:center; text-align:center; }
   .result .badge{
     font-size: 13px; color: var(--success); background:#EAF7F1;
-    border-radius: 20px; padding: 5px 14px; margin-bottom: 18px; font-weight:600;
+    border-radius: 20px; padding: 5px 14px; margin-bottom: 16px; font-weight:600;
   }
-  .result .range{
-    font-family:'Space Grotesk', sans-serif;
-    font-size: 46px;
-    font-weight:600;
-    color: var(--navy);
-    line-height:1;
-    margin-bottom: 6px;
+  .result h1.q{ margin-bottom: 4px; }
+  .result .rangesub{ color: var(--steel); font-size: 14px; margin-bottom: 20px; }
+
+  .notice{
+    width:100%; text-align:left; background:#FEF6EA; border:1.5px solid var(--amber-dark);
+    border-radius:10px; padding:13px 16px; margin-bottom:16px; font-size:13.5px; line-height:1.5; color: var(--navy);
   }
-  .result .rangesub{ color: var(--steel); font-size: 14px; margin-bottom: 16px; }
-  .result .lowhigh{
-    display:flex; margin-bottom: 20px;
+  .notice b{ display:block; margin-bottom:2px; }
+  .tiers{ width:100%; display:flex; flex-direction:column; gap:10px; margin-bottom: 18px; text-align:left; }
+  .tier{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    border: 1.5px solid var(--line); border-radius: 11px; padding: 15px 18px; background:#fff;
   }
-  .result .lh-item{ display:flex; flex-direction:column; align-items:center; margin: 0 14px; }
-  .result .lh-label{ font-size:12px; color:var(--steel); text-transform:uppercase; letter-spacing:.03em; margin-bottom:2px; }
-  .result .lh-value{ font-family:'Space Grotesk', sans-serif; font-size:19px; font-weight:600; color:var(--navy); }
+  .tier .t-name{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:16px; color: var(--navy); }
+  .tier .t-desc{ font-size:12.5px; color: var(--steel); margin-top:2px; line-height:1.4; }
+  .tier .t-price{ text-align:right; flex-shrink:0; }
+  .tier .t-from{ display:block; font-size:11.5px; color: var(--steel); }
+  .tier .t-amt{ font-family:'Space Grotesk', sans-serif; font-size:26px; font-weight:600; color: var(--navy); line-height:1.1; }
+
   .result .factors{
-    text-align:left;
-    background: var(--paper);
-    border-radius: 10px;
-    padding: 16px 18px;
-    width:100%;
-    font-size: 13.5px;
-    color: var(--steel);
-    line-height:1.7;
-    margin-bottom: 22px;
+    text-align:left; background: var(--paper); border-radius: 10px; padding: 16px 18px; width:100%;
+    font-size: 13.5px; color: var(--steel); line-height:1.7; margin-bottom: 20px;
   }
   .result .factors b{ color: var(--navy); }
-  .result .disclaimer{ font-size:12px; color:#8393A8; max-width:44ch; margin-bottom:20px; }
+  .result .disclaimer{ font-size:12px; color:#8393A8; max-width:48ch; margin-bottom:20px; }
 
-  /* ---- thank you ---- */
   .ty{ align-items:center; text-align:center; justify-content:center; gap:14px; }
   .ty .check{
-    width:56px;height:56px;border-radius:50%;
-    background:#EAF7F1; color: var(--success);
-    display:flex; align-items:center; justify-content:center; font-size:28px;
-    margin-bottom: 6px;
+    width:56px;height:56px;border-radius:50%; background:#EAF7F1; color: var(--success);
+    display:flex; align-items:center; justify-content:center; font-size:28px; margin-bottom: 6px;
   }
   .ty h1.q{ font-size: 23px; }
 
   @media (max-width: 480px){
-    .tiles{ grid-template-columns: 1fr; }
     .card{ padding: 26px 20px 22px; }
     h1.q{ font-size:21px; }
-    .result .range{ font-size: 36px; }
+    .tier{ padding: 13px 14px; }
+    .tier .t-amt{ font-size: 22px; }
   }
 </style>
 </head>
@@ -259,7 +173,7 @@
 <div class="wrap">
   <div class="toolhead">
     <div class="brand"><span class="mark"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 16V7a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v9M3 16h11M3 16v2a1 1 0 0 0 1 1h1M14 16v2a1 1 0 0 0 1 1h1m0 0a2 2 0 1 0 4 0m-4 0h4m2-6h-2v-3l2.2-2.2A1 1 0 0 1 21 6.5V13a1 1 0 0 1-1 1h-1M6 19a2 2 0 1 0 4 0" stroke="#F6F8FB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Blue Ox Moving &amp; Storage</div>
-    <div class="steplabel" id="stepLabel">Step 1 of 6</div>
+    <div class="steplabel" id="stepLabel">Step 1 of 5</div>
   </div>
 
   <div class="route">
@@ -274,9 +188,10 @@
     <div class="step active" data-step="1">
       <h1 class="q">What are you moving?</h1>
       <p class="sub">This changes how we scope your estimate.</p>
-      <div class="tiles" id="tiles-propertytype">
-        <button class="tile" data-value="home"><span class="ic">&#127968;</span><span><span class="name">Home</span><span class="hint">A house, apartment, or condo</span></span></button>
-        <button class="tile" data-value="commercial"><span class="ic">&#127970;</span><span><span class="name">Office or commercial</span><span class="hint">A business, not a home</span></span></button>
+      <div class="tiles single" id="tiles-propertytype">
+        <button class="tile" data-value="house"><span class="ic">&#127969;</span><span><span class="name">House</span><span class="hint">A single-family home or townhome</span></span></button>
+        <button class="tile" data-value="apartment"><span class="ic">&#127970;</span><span><span class="name">Apartment</span><span class="hint">An apartment, condo, or loft</span></span></button>
+        <button class="tile" data-value="commercial"><span class="ic">&#128188;</span><span><span class="name">Office or commercial</span><span class="hint">Quoted individually by our team</span></span></button>
       </div>
       <div class="navrow">
         <span></span>
@@ -287,7 +202,7 @@
     <!-- Step 2: move type -->
     <div class="step" data-step="2">
       <h1 class="q">Where's your move taking you?</h1>
-      <p class="sub">This is the single biggest factor in how your move is priced.</p>
+      <p class="sub">Long-distance moves include the drive time to and from your destination.</p>
       <div class="tiles" id="tiles-movetype">
         <button class="tile" data-value="local"><span class="ic">&#127968;</span><span><span class="name">Local move</span><span class="hint">Staying in the greater Houston area</span></span></button>
         <button class="tile" data-value="long"><span class="ic">&#128506;&#65039;</span><span><span class="name">Long-distance move</span><span class="hint">Crossing state lines or 400+ miles</span></span></button>
@@ -298,10 +213,10 @@
       </div>
     </div>
 
-    <!-- Step 3: size (content swapped by JS depending on property type) -->
+    <!-- Step 3: size -->
     <div class="step" data-step="3">
-      <h1 class="q" id="sizeHeading">What's the size of your place?</h1>
-      <p class="sub" id="sizeSub">A rough bedroom count is enough &mdash; we'll confirm exact details later.</p>
+      <h1 class="q">What's the size of your place?</h1>
+      <p class="sub">A rough bedroom count is enough &mdash; we'll confirm exact details later.</p>
       <div class="tiles" id="tiles-size">
         <button class="tile" data-value="studio"><span class="ic">&#128716;</span><span class="name">Studio / 1 bed</span></button>
         <button class="tile" data-value="2bed"><span class="ic">&#128716;</span><span class="name">2 bedrooms</span></button>
@@ -315,23 +230,8 @@
       </div>
     </div>
 
-    <!-- Step 4: services -->
+    <!-- Step 4: timeline -->
     <div class="step" data-step="4">
-      <h1 class="q">What do you need help with?</h1>
-      <p class="sub">Pick the option closest to what you're picturing.</p>
-      <div class="tiles single" id="tiles-services">
-        <button class="tile" data-value="move"><span class="ic">&#128230;</span><span><span class="name">Just the move</span><span class="hint">Loading, transport, and unloading</span></span></button>
-        <button class="tile" data-value="pack"><span class="ic">&#129513;</span><span><span class="name">Move + packing</span><span class="hint">We pack it, you don't touch a box</span></span></button>
-        <button class="tile" data-value="storage"><span class="ic">&#127959;&#65039;</span><span><span class="name">Move + packing + storage</span><span class="hint">Need somewhere to keep things in the meantime</span></span></button>
-      </div>
-      <div class="navrow">
-        <button class="btn ghost" data-back="3">Back</button>
-        <button class="btn primary" id="next4" disabled>Continue</button>
-      </div>
-    </div>
-
-    <!-- Step 5: timeline -->
-    <div class="step" data-step="5">
       <h1 class="q">When are you hoping to move?</h1>
       <p class="sub">Ballpark is fine &mdash; you can lock in an exact date afterward.</p>
       <div class="tiles single" id="tiles-timeline">
@@ -341,15 +241,15 @@
         <button class="tile" data-value="research"><span class="ic">&#128269;</span><span class="name">Just researching</span></button>
       </div>
       <div class="navrow">
-        <button class="btn ghost" data-back="4">Back</button>
-        <button class="btn primary" id="next5" disabled>Continue</button>
+        <button class="btn ghost" data-back="3">Back</button>
+        <button class="btn primary" id="next4" disabled>Continue</button>
       </div>
     </div>
 
-    <!-- Step 6: contact -->
-    <div class="step" data-step="6">
-      <h1 class="q">Where should we send your estimate?</h1>
-      <p class="sub">We'll confirm details before anything is booked &mdash; this doesn't commit you to anything.</p>
+    <!-- Step 5: contact -->
+    <div class="step" data-step="5">
+      <h1 class="q" id="contactHeading">Where should we send your estimate?</h1>
+      <p class="sub" id="contactSub">We'll confirm details before anything is booked &mdash; this doesn't commit you to anything.</p>
       <div class="fields">
         <label class="f">Full name
           <input type="text" id="fName" autocomplete="name" placeholder="Jordan Rivera">
@@ -373,7 +273,7 @@
         <div class="err" id="formErr"></div>
       </div>
       <div class="navrow">
-        <button class="btn ghost" data-back="5">Back</button>
+        <button class="btn ghost" id="backFrom5">Back</button>
         <button class="btn primary" id="submitBtn">Get my estimate</button>
       </div>
     </div>
@@ -386,15 +286,16 @@
 
     <!-- Result -->
     <div class="step result" data-step="result">
-      <div class="badge">Estimate ready</div>
-      <div class="range" id="resultRange">$0</div>
-      <div class="rangesub" id="resultSub">average estimate for your move</div>
-      <div class="lowhigh">
-        <div class="lh-item"><span class="lh-label">Low</span><span class="lh-value" id="resultLow">$0</span></div>
-        <div class="lh-item"><span class="lh-label">High</span><span class="lh-value" id="resultHigh">$0</span></div>
+      <div class="badge" id="resultBadge">Estimate ready</div>
+      <h1 class="q" id="resultTitle">Your estimate</h1>
+      <div class="rangesub" id="resultSub"></div>
+      <div class="notice" id="resultNotice" style="display:none;">
+        <b>This is an orientative estimate.</b>
+        A Blue Ox moving specialist will be in contact soon to prepare a tailored estimate for your move.
       </div>
+      <div class="tiers" id="resultTiers"></div>
       <div class="factors" id="resultFactors"></div>
-      <div class="disclaimer" id="resultDisclaimer">This is a ballpark estimate. Your final quote may vary once we confirm details.</div>
+      <div class="disclaimer" id="resultDisclaimer"></div>
       <p class="sentnote" id="sentNote">&#10003; Your details have already been sent to Blue Ox &mdash; a moving specialist will follow up soon.</p>
       <button class="btn primary" id="finishBtn" style="width:100%;">Continue</button>
     </div>
@@ -403,7 +304,7 @@
     <div class="step ty" data-step="ty">
       <div class="check">&#10003;</div>
       <h1 class="q">You're all set. We got this.</h1>
-      <p class="sub">A Blue Ox moving specialist will reach out within one business day &mdash; background-checked crew, GPS-tracked truck, and a rate that won't change once it's booked.</p>
+      <p class="sub">A Blue Ox moving specialist will reach out within one business day.</p>
     </div>
 
   </div>
@@ -412,133 +313,81 @@
 <script>
 /*
   ============================================================
-  PROTOTYPE ONLY — front-end demo, no real network requests.
+  Blue Ox Moving & Storage — Quote Calculator
   ============================================================
-  Production integration notes for dev, based on SmartMoving's
-  actual published Lead API (help.smartmoving.com, "SmartMoving
-  Lead API Integration Guide" — verified Sep 2026):
+  The result screen shows three service tiers side by side, each with
+  the LOW end of its likely cost:
+    1. Move only
+    2. Move + packing      (packing labor is included in the price;
+                            the hours are never shown to the customer)
+    3. Move + packing + storage (adds the first month of one vault)
 
-  ENDPOINT (real, documented, but do NOT call it from this browser
-  file directly in production):
+  Pricing is Blue Ox's real rate structure, as confirmed by the client.
+  Packing materials are billed on top and shown as a note, not priced.
+
+  Commercial / office moves are not calculated: they are done after hours
+  and on weekends, by the hour, often over several days, and every job
+  differs. That path skips to contact capture and a specialist follows up.
+
+  PRODUCTION INTEGRATION NOTES (SmartMoving Lead API)
+  ---------------------------------------------------
+  ENDPOINT (documented, but do NOT call it from this browser file):
     POST https://api.smartmoving.com/api/leads/from-provider/v2?providerKey={provider_key}
     Header: Content-Type: application/json
-    The provider key is account-specific and lets anyone submit leads
-    directly into Blue Ox's SmartMoving account — it must never be
-    embedded in client-side JavaScript, since anything in this file
-    ships to every visitor's browser and is visible via "View Source"
-    or dev tools. Instead: this calculator should POST to a small
-    server-side endpoint we control (serverless function or a script
-    on Blue Ox's own hosting), which holds the provider key as a
-    server-side environment variable and forwards the request to
-    SmartMoving from there. The browser never sees the key.
+  The provider key lets anyone submit leads into Blue Ox's SmartMoving
+  account, so it must never ship in client-side JavaScript. POST to a small
+  server-side relay we control (serverless function or script on Blue Ox's
+  hosting) that holds the key as an environment variable and forwards the
+  request. Also email a backup copy of every submission server-side in case
+  the SmartMoving call fails.
 
-  FIELD MAPPING — buildSmartMovingPayload() below builds the exact
-  JSON body using SmartMoving's real supported field names. Three
-  of our calculator's inputs do NOT have a clean 1:1 field in their
-  schema, so read the comments in buildSmartMovingPayload():
-    - local vs. long-distance has no dedicated field
-    - "move + packing + storage" has no single matching ServiceType
-    - our fuzzy timeline ("3-6 weeks out") isn't an exact MoveDate
-  All three are handled by writing a clear line into "notes" instead
-  of forcing bad data into the wrong field.
-
-  1) SUBMISSION: replace `fakeSubmitToSmartMoving()` with a real
-     fetch() POST to OUR OWN server-side relay endpoint (e.g.
-     POST /api/submit-move-lead), sending the object that
-     `buildSmartMovingPayload()` returns as the request body. That
-     server-side endpoint — not this file — holds the SmartMoving
-     provider key and makes the actual call to SmartMoving's API.
-     Also implement the "Best Practice" from SmartMoving's docs on
-     that server side: email a copy of every submission as a backup
-     in case the SmartMoving API call fails.
-
-  2) ERROR HANDLING: SmartMoving returns HTTP 400 for duplicate
-     submissions with a specific message — catch that and tell the
-     customer their info was already received, per their guidance.
-
-  3) REDIRECT: replace `showStep('ty')` in finishBtn's handler with
-     a real redirect once a destination URL exists, e.g.:
-       window.location.href = "/estimate-request-thank-you";
-
-  4) RATES: every number in ESTIMATE_RATES is a placeholder for
-     visual/UX purposes only. Replace with Blue Ox's real hourly
-     rate, crew-hours-per-home-size assumptions, and travel-fee
-     logic before this goes anywhere near production.
-
-  5) COMPLIANCE: the "It's okay to text me" checkbox maps to
-     SmartMoving's "UserOptIn" field, which their docs say is
-     recommended whenever you collect a phone number for texting.
-     Confirm the exact required wording with Blue Ox / legal per
-     SmartMoving's "Quote Form Opt-in Changes for 10DLC" article
-     before launch — the wording here is a placeholder, not
-     reviewed legal copy.
+  1) Replace fakeSubmitToSmartMoving() with a fetch() POST to our relay
+     (e.g. /api/submit-move-lead) sending buildSmartMovingPayload().
+  2) SmartMoving returns HTTP 400 for duplicate submissions — catch it and
+     tell the customer their info was already received.
+  3) Replace showStep('ty') in finishBtn's handler with a redirect to the
+     thank-you page once a URL exists.
+  4) The "text me" checkbox maps to SmartMoving's UserOptIn. Confirm the
+     exact opt-in wording with Blue Ox / legal per SmartMoving's 10DLC
+     article before launch; the current wording is not reviewed legal copy.
+  5) captureAttributionOnce() must run on EVERY page of the site so
+     first-touch source survives multi-page visits.
+  6) serviceType is sent as "Moving" because the customer compares three
+     tiers rather than choosing one. The full estimate the customer saw is
+     sent in the "notes" field as one plain-text line (a.estimateText, built
+     by buildEstimateText() from the same values shown on screen). Property
+     type (house / apartment) is also in notes. The payload is built AFTER
+     the estimate is calculated and BEFORE the result screen is shown.
   ============================================================
 */
 
-// ---- Real Blue Ox local rate structure (confirmed by client) ----
 const ESTIMATE_RATES = {
-  minimumHours: 3,           // 3-hour minimum applies to every local move
-  ratePerCrewSize: {         // $/hr by crew size — includes movers, truck, trip fee, and materials for Move only
+  minimumHours: 3,           // 3-hour minimum on every move
+  ratePerCrewSize: {         // $/hr — movers, truck, trip fee, and materials for Move only
     2: 150, 3: 225, 4: 300
   },
-  // Crew size and typical on-site hours by home size (client-provided ranges).
-  // Studio and 1BR share the same 2-3 hour range, so they're combined into
-  // one tile in the UI without losing accuracy.
+  // Crew size and the LOW end of typical on-site hours (client-provided ranges)
   localBySize: {
-    studio: { crew: 2, hoursLow: 2, hoursHigh: 3 },
-    '2bed':  { crew: 2, hoursLow: 3, hoursHigh: 4 },
-    '3bed':  { crew: 3, hoursLow: 6, hoursHigh: 8 },
-    '4bed':  { crew: 4, hoursLow: 8, hoursHigh: 12 },
-    '5bed':  { crew: 4, hoursLow: 10, hoursHigh: 14 }
+    studio: { crew: 2, hours: 2 },
+    '2bed': { crew: 2, hours: 3 },
+    '3bed': { crew: 3, hours: 6 },
+    '4bed': { crew: 4, hours: 8 },
+    '5bed': { crew: 4, hours: 10 }
   },
-  // PLACEHOLDER: client's numbers cover "Move only." No packing/storage
-  // rate was provided yet, so this multiplier is still an estimate —
-  // replace once Blue Ox gives us real packing/storage pricing.
-  serviceMultiplier: { move: 1, pack: 1.35, storage: 1.5 },
-
-  // PLACEHOLDER: long-distance is priced by weight, not hours, and the
-  // client's numbers above only cover local moves. These weight and
-  // per-pound figures are still widely-cited industry averages, not
-  // Blue Ox-specific, pending real long-distance numbers from the client.
-  weightLbsBySize: {
-    studio: 2000, '2bed': 5000, '3bed': 7500, '4bed': 9000, '5bed': 12000
-  },
-  longDistanceRatePerLbLow: 0.50,
-  longDistanceRatePerLbHigh: 0.80,
-
-  // PLACEHOLDER: commercial pricing wasn't part of the client's numbers
-  // either. Reusing the same real local hourly rates by assigning a crew
-  // size per space-size tier, rather than inventing a separate rate.
-  commercialBySize: {
-    small:  { crew: 2, hoursLow: 3, hoursHigh: 5 },
-    medium: { crew: 3, hoursLow: 6, hoursHigh: 9 },
-    large:  { crew: 4, hoursLow: 10, hoursHigh: 16 }
-  }
+  packingRatePerHour: 159,   // packing labor; materials are billed on top
+  storagePerVaultPerMonth: 60
 };
+
+// Long-distance moves are billed by the hour like local moves, with the
+// round-trip drive time added at the same hourly rate. Drive time comes from
+// the distance between the two ZIP codes, using deliberately low-end values.
+const DRIVE = { roadFactor: 1.2, avgMph: 60 };
 
 const state = { step: 1, answers: {} };
 
-/*
-  ATTRIBUTION CAPTURE — determines whether this visitor's original
-  entry to the site was organic search, paid search, paid social,
-  organic social, email, referral, or direct — using the entry
-  referrer and any UTM / click-ID parameters in the landing URL.
-
-  IMPORTANT for production: this capture snippet needs to run on
-  EVERY page of the site (e.g. included in the shared header/footer
-  template), not just on this calculator page. It writes to
-  sessionStorage exactly once per session, on first load — so if a
-  visitor reads a blog post first and reaches the calculator several
-  clicks later, we still credit their real first-touch source instead
-  of "your own site" as the referrer.
-
-  This is best-effort, not exact: some browsers/privacy settings
-  strip referrer data entirely, and those visits will fall into
-  "Direct / Unknown" even when they were genuinely organic. That's a
-  normal limitation of client-side attribution, not a bug.
-*/
+/* ---------------- Attribution capture ---------------- */
 function captureAttributionOnce(){
-  if (sessionStorage.getItem('bx_attribution')) return; // already captured this session
+  if (sessionStorage.getItem('bx_attribution')) return;
 
   const params = new URLSearchParams(window.location.search);
   const utmSource = params.get('utm_source');
@@ -578,61 +427,32 @@ function getAttribution(){
   } catch(e){ return { bucket: 'Direct' }; }
 }
 
-const totalSteps = 6;
+/* ---------------- Step navigation ---------------- */
 const stepEls = {};
 document.querySelectorAll('.step').forEach(el => stepEls[el.dataset.step] = el);
+
+const isCommercial = () => state.answers.propertyType === 'commercial';
+
+function progressInfo(step){
+  // Commercial path is two screens: type, then contact.
+  if (isCommercial()) return { n: step === 5 ? 2 : 1, total: 2 };
+  return { n: step, total: 5 };
+}
 
 function showStep(key){
   Object.values(stepEls).forEach(el => el.classList.remove('active'));
   stepEls[key].classList.add('active');
   if (!isNaN(key)) {
     state.step = Number(key);
-    updateRoute(state.step);
-    document.getElementById('stepLabel').textContent = `Step ${state.step} of ${totalSteps}`;
+    const { n, total } = progressInfo(state.step);
+    const pct = ((n - 1) / (total - 1)) * 100;
+    document.getElementById('routeFill').style.width = pct + '%';
+    document.getElementById('routeTruck').style.left = pct + '%';
+    document.getElementById('stepLabel').textContent = `Step ${n} of ${total}`;
   }
 }
+showStep('1');
 
-function updateRoute(step){
-  const pct = ((step - 1) / (totalSteps - 1)) * 100;
-  document.getElementById('routeFill').style.width = pct + '%';
-  document.getElementById('routeTruck').style.left = pct + '%';
-}
-updateRoute(1);
-
-// Step 3 (size) shows different tiles depending on the Step 1 answer —
-// bedroom count doesn't mean anything for an office/commercial move, so
-// we swap both the question and the tile set rather than pretending a
-// residential question fits every move type.
-function renderSizeStep(){
-  const heading = document.getElementById('sizeHeading');
-  const sub = document.getElementById('sizeSub');
-  const container = document.getElementById('tiles-size');
-  document.getElementById('next3').disabled = true;
-  delete state.answers.homeSize;
-
-  if (state.answers.propertyType === 'commercial'){
-    heading.textContent = 'About how big is the space?';
-    sub.textContent = "Rough square footage is fine — we'll confirm exact details later.";
-    container.innerHTML = `
-      <button class="tile" data-value="small"><span class="ic">&#127970;</span><span class="name">Small &mdash; under 2,000 sq ft</span></button>
-      <button class="tile" data-value="medium"><span class="ic">&#127970;</span><span class="name">Medium &mdash; 2,000&ndash;10,000 sq ft</span></button>
-      <button class="tile" data-value="large"><span class="ic">&#127970;</span><span class="name">Large &mdash; 10,000+ sq ft</span></button>
-    `;
-  } else {
-    heading.textContent = "What's the size of your place?";
-    sub.textContent = "A rough bedroom count is enough — we'll confirm exact details later.";
-    container.innerHTML = `
-      <button class="tile" data-value="studio"><span class="ic">&#128716;</span><span class="name">Studio / 1 bed</span></button>
-      <button class="tile" data-value="2bed"><span class="ic">&#128716;</span><span class="name">2 bedrooms</span></button>
-      <button class="tile" data-value="3bed"><span class="ic">&#128716;</span><span class="name">3 bedrooms</span></button>
-      <button class="tile" data-value="4bed"><span class="ic">&#128716;</span><span class="name">4 bedrooms</span></button>
-      <button class="tile" data-value="5bed"><span class="ic">&#128716;</span><span class="name">5+ bedrooms</span></button>
-    `;
-  }
-  wireTiles('tiles-size', 'homeSize', 'next3');
-}
-
-// tile selection wiring
 function wireTiles(containerId, answerKey, nextBtnId){
   const container = document.getElementById(containerId);
   container.querySelectorAll('.tile').forEach(tile => {
@@ -646,20 +466,36 @@ function wireTiles(containerId, answerKey, nextBtnId){
 }
 wireTiles('tiles-propertytype', 'propertyType', 'next1');
 wireTiles('tiles-movetype', 'moveType', 'next2');
-wireTiles('tiles-services', 'services', 'next4');
-wireTiles('tiles-timeline', 'timeline', 'next5');
+wireTiles('tiles-size', 'homeSize', 'next3');
+wireTiles('tiles-timeline', 'timeline', 'next4');
 
-document.getElementById('next1').addEventListener('click', () => showStep('2'));
-document.getElementById('next2').addEventListener('click', () => { renderSizeStep(); showStep('3'); });
+function configureContactStep(){
+  const commercial = isCommercial();
+  document.getElementById('contactHeading').textContent = commercial
+    ? 'Tell us how to reach you'
+    : 'Where should we send your estimate?';
+  document.getElementById('contactSub').textContent = commercial
+    ? "Every office move is different, so a specialist will put together an exact quote for you. This doesn't commit you to anything."
+    : "We'll confirm details before anything is booked \u2014 this doesn't commit you to anything.";
+  document.getElementById('submitBtn').textContent = commercial ? 'Request my quote' : 'Get my estimate';
+}
+
+document.getElementById('next1').addEventListener('click', () => {
+  if (isCommercial()){ configureContactStep(); showStep('5'); }
+  else showStep('2');
+});
+document.getElementById('next2').addEventListener('click', () => showStep('3'));
 document.getElementById('next3').addEventListener('click', () => showStep('4'));
-document.getElementById('next4').addEventListener('click', () => showStep('5'));
-document.getElementById('next5').addEventListener('click', () => showStep('6'));
+document.getElementById('next4').addEventListener('click', () => { configureContactStep(); showStep('5'); });
 document.querySelectorAll('[data-back]').forEach(btn => {
   btn.addEventListener('click', () => showStep(btn.dataset.back));
 });
+document.getElementById('backFrom5').addEventListener('click', () => {
+  showStep(isCommercial() ? '1' : '4');
+});
 
-// step 5 validation + submit
-document.getElementById('submitBtn').addEventListener('click', () => {
+/* ---------------- Submit ---------------- */
+document.getElementById('submitBtn').addEventListener('click', async () => {
   const name = document.getElementById('fName').value.trim();
   const phone = document.getElementById('fPhone').value.trim();
   const email = document.getElementById('fEmail').value.trim();
@@ -681,88 +517,127 @@ document.getElementById('submitBtn').addEventListener('click', () => {
     return;
   }
   errEl.textContent = '';
-  state.answers.name = name;
-  state.answers.phone = phone;
-  state.answers.email = email;
-  state.answers.zip = zip;
-  state.answers.zipTo = zipTo;
-  state.answers.optIn = optIn;
+  Object.assign(state.answers, { name, phone, email, zip, zipTo, optIn });
 
-  // Calculate the estimate FIRST, so the numbers shown to the customer
-  // are included in what gets sent to SmartMoving, not just raw inputs
-  // (the client asked for the displayed estimate to land in the CRM too).
-  calculateEstimate();
-
-  // The lead is submitted HERE — before the estimate is shown — so the
-  // customer's details reach Blue Ox regardless of whether they read
-  // their result, close the tab, or lose signal on the next screen.
   showStep('calc');
+
+  // Estimate first, so the numbers shown to the customer are also what lands in the CRM.
+  await calculateEstimate();
+
+  // The lead is submitted before the estimate is shown, so Blue Ox gets the
+  // customer's details even if they close the tab on the next screen.
   const payload = buildSmartMovingPayload(state.answers);
-  fakeSubmitToSmartMoving(payload).then(() => {
-    renderResult();
-    showStep('result');
-  }).catch(() => {
-    // PRODUCTION: show a real inline error here and let them retry —
-    // see "Handling Errors" in SmartMoving's API guide, including the
-    // specific duplicate-submission (HTTP 400) case.
-    showStep('result');
-  });
+  try {
+    await fakeSubmitToSmartMoving(payload);
+  } catch(e){
+    // PRODUCTION: show a real inline error and let them retry, including the
+    // duplicate-submission (HTTP 400) case from SmartMoving's API guide.
+  }
+  renderResult();
+  showStep('result');
 });
 
-// Builds the exact JSON body SmartMoving's Lead API expects, using their
-// real documented field names. This is what a production fetch() call
-// would send as the request body.
+/* ---------------- Estimate ---------------- */
+async function zipToLatLon(zip){
+  const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+  if (!res.ok) throw new Error('ZIP lookup failed: ' + zip);
+  const data = await res.json();
+  const p = data.places && data.places[0];
+  if (!p) throw new Error('ZIP not found: ' + zip);
+  return { lat: parseFloat(p.latitude), lon: parseFloat(p.longitude) };
+}
+
+function haversineMiles(a, b){
+  const R = 3958.8, rad = d => d * Math.PI / 180;
+  const dLat = rad(b.lat - a.lat), dLon = rad(b.lon - a.lon);
+  const h = Math.sin(dLat/2)**2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+const roundTo10 = n => Math.round(n / 10) * 10;
+
+async function calculateEstimate(){
+  const a = state.answers;
+  a.tiers = null;
+  a.estimateDetail = null;
+
+  // Commercial moves are quoted individually — no numbers are calculated.
+  if (isCommercial()) return;
+
+  try {
+    const cfg = ESTIMATE_RATES.localBySize[a.homeSize];
+    const rate = cfg && ESTIMATE_RATES.ratePerCrewSize[cfg.crew];
+    if (!cfg || !rate) throw new Error('Missing rate inputs');
+
+    const onsiteHours = Math.max(cfg.hours, ESTIMATE_RATES.minimumHours);
+    let driveHours = 0;
+
+    if (a.moveType === 'long'){
+      const [from, to] = await Promise.all([zipToLatLon(a.zip), zipToLatLon(a.zipTo)]);
+      const roadMiles = haversineMiles(from, to) * DRIVE.roadFactor;
+      driveHours = Math.round((roadMiles * 2 / DRIVE.avgMph) * 2) / 2; // round trip, nearest half hour
+    }
+
+    const moveCost = (onsiteHours + driveHours) * rate;
+    // Packing labor is accounted for in the price but never itemized as hours.
+    const packCost = moveCost + cfg.hours * ESTIMATE_RATES.packingRatePerHour;
+    const storageCost = packCost + ESTIMATE_RATES.storagePerVaultPerMonth;
+
+    a.tiers = {
+      move: roundTo10(moveCost),
+      pack: roundTo10(packCost),
+      storage: roundTo10(storageCost)
+    };
+    a.estimateDetail = { crew: cfg.crew, onsiteHours, driveHours };
+    a.estimateText = buildEstimateText(a);
+  } catch (err){
+    console.error('[calculator] could not compute an estimate:', err);
+    a.tiers = null;
+    a.estimateText = null;
+  }
+}
+
+// The exact estimate the customer sees, as one plain-text line for the CRM.
+// It is built from the same a.tiers / a.estimateDetail values that renderResult()
+// displays, so what the sales rep reads in SmartMoving always matches the screen.
+function buildEstimateText(a){
+  const d = a.estimateDetail, t = a.tiers, $ = n => '$' + n.toLocaleString();
+  let basis = `${d.crew} movers, ~${d.onsiteHours} hrs on site`;
+  if (d.driveHours) basis += `, ~${d.driveHours} hrs round-trip drive`;
+  return `Estimate shown to customer (low end, orientative): Move only ${$(t.move)} | Move + packing ${$(t.pack)} | `
+    + `Move + packing + storage ${$(t.storage)} (storage tier = first month of 1 vault at ${$(ESTIMATE_RATES.storagePerVaultPerMonth)}/vault/month; `
+    + `packing materials billed separately) | Basis: ${basis}. `
+    + `Customer was told a specialist will follow up with a tailored estimate.`;
+}
+
+/* ---------------- SmartMoving payload ---------------- */
 function buildSmartMovingPayload(a){
-  const serviceTypeMap = {
-    move: 'Moving',
-    pack: 'MovingAndPacking',
-    // SmartMoving's ServiceType enum has no single "move + pack + storage"
-    // value, so we send the closest real value and note storage separately.
-    storage: 'MovingAndPacking'
-  };
-  const bedroomsMap = {
-    studio: '1', '2bed': '2', '3bed': '3', '4bed': '4', '5bed': '5+'
-  };
-  const commercialSizeLabel = {
-    small: 'Small (under 2,000 sq ft)', medium: 'Medium (2,000\u201310,000 sq ft)', large: 'Large (10,000+ sq ft)'
-  };
+  const commercial = isCommercial();
+  const bedroomsMap = { studio: '1', '2bed': '2', '3bed': '3', '4bed': '4', '5bed': '5+' };
   const timelineLabel = {
     '2weeks': 'within 2 weeks', '6weeks': '3\u20136 weeks out',
     '3months': '2\u20133 months out', research: 'just researching'
   }[a.timeline];
-  const isCommercial = a.propertyType === 'commercial';
 
-  const notesParts = [
-    `Move type: ${a.moveType === 'long' ? 'Long-distance' : 'Local'}`,
-    `Timeline: ${timelineLabel}`
-  ];
-  // Client asked for the estimate shown to the customer to also land in
-  // SmartMoving, not just the raw inputs — this is that number, exactly
-  // as displayed on the result screen (see renderResult / computeLocalRange).
-  if (a.estimateLow != null && a.estimateHigh != null){
-    notesParts.push(`Calculator estimate shown to customer: $${a.estimateLow.toLocaleString()} low / $${a.estimateAverage.toLocaleString()} average / $${a.estimateHigh.toLocaleString()} high`);
+  const notesParts = [];
+  if (commercial){
+    notesParts.push('Commercial move: quoted individually (after hours / weekends, hourly, often multi-day)');
   } else {
-    notesParts.push('Calculator could not compute an estimate for this combination (special-quote fallback shown to customer)');
-  }
-  if (a.services === 'storage') notesParts.push('Interested in storage in addition to packing/moving');
-  if (isCommercial){
-    // SmartMoving's ServiceType enum has "Commercial" as its own value,
-    // separate from Moving/Packing/MovingAndPacking — it can't represent
-    // "Commercial + Packing" at the same time, so the packing/storage
-    // preference from Step 4 goes into notes instead of being lost.
-    notesParts.push(`Requested service level: ${{move:'Move only', pack:'Move + packing', storage:'Move + packing + storage'}[a.services] || a.services}`);
-    notesParts.push(`Space size: ${commercialSizeLabel[a.homeSize] || a.homeSize}`);
+    notesParts.push(`Property type: ${a.propertyType === 'apartment' ? 'Apartment' : 'House'}`);
+    notesParts.push(`Move type: ${a.moveType === 'long' ? 'Long-distance' : 'Local'}`);
+    notesParts.push(`Timeline: ${timelineLabel}`);
+    if (a.estimateText){
+      notesParts.push(a.estimateText);
+    } else {
+      notesParts.push('Calculator could not compute an estimate (specialist follow-up message shown to customer)');
+    }
   }
   notesParts.push('Lead source: Moving Cost Calculator (not the main estimate-request form)');
 
-  // Map our internal attribution bucket to the exact referral-source
-  // string SmartMoving should receive. NOTE: confirm with Blue Ox
-  // whether they already have referral sources configured under these
-  // (or similar) names in SmartMoving Settings > Sales > Referral
-  // Sources — if our string doesn't exactly match an existing one,
-  // SmartMoving auto-creates a new, separate entry rather than rolling
-  // into what they already track.
   const attribution = getAttribution();
+  // Confirm these strings match the referral sources already configured in
+  // SmartMoving (Settings > Sales > Referral Sources); otherwise SmartMoving
+  // auto-creates new, separate entries.
   const referralSourceMap = {
     'Organic Search': 'Website - Organic SEO',
     'Paid Search': 'Website - Paid Search',
@@ -780,159 +655,100 @@ function buildSmartMovingPayload(a){
     userOptIn: a.optIn ? 'true' : 'false',
     originZip: a.zip,
     destinationZip: a.zipTo,
-    serviceType: isCommercial ? 'Commercial' : serviceTypeMap[a.services],
+    serviceType: commercial ? 'Commercial' : 'Moving',
     referralSource: referralSourceMap[attribution.bucket] || 'Website - Direct',
     notes: notesParts.join(' | ')
-    // MoveDate intentionally omitted: SmartMoving's own docs describe
-    // YYYYMMDD format but their own JSON sample shows "7/25/2020" —
-    // those two contradict each other, so confirm the real expected
-    // format with SmartMoving support before ever populating this
-    // field. Separately, our calculator only collects a fuzzy
-    // timeframe anyway, not an exact date, so it's captured in notes
-    // instead regardless of format.
+    // MoveDate intentionally omitted: SmartMoving's docs describe YYYYMMDD but
+    // their own JSON sample shows "7/25/2020". Confirm the real format with
+    // SmartMoving support before populating it. The calculator only collects
+    // a fuzzy timeframe anyway, so it is captured in notes.
   };
-
-  // "Bedrooms" doesn't mean anything for a commercial move, so it's only
-  // sent for residential — the space-size tier goes into notes instead
-  // for commercial (see above).
-  if (!isCommercial) payload.bedrooms = bedroomsMap[a.homeSize];
-
-  // Native UTM fields SmartMoving supports directly — only sent if
-  // present, so organic/direct visits simply omit these rather than
-  // sending empty strings.
+  if (!commercial) payload.bedrooms = bedroomsMap[a.homeSize];
   if (attribution.utmSource) payload.utmSource = attribution.utmSource;
   if (attribution.utmMedium) payload.utmMedium = attribution.utmMedium;
-
   return payload;
 }
 
-// PROTOTYPE ONLY: simulates the latency of a real API call and logs the
-// exact payload that would be sent. Replace the body of this function
-// with a real fetch() POST to the endpoint documented above.
+// PROTOTYPE ONLY: replace with a real fetch() POST to the server-side relay.
 function fakeSubmitToSmartMoving(payload){
   console.log('[prototype] would POST to SmartMoving:', payload);
   return new Promise(resolve => setTimeout(resolve, 1400));
 }
 
-function computeLocalRange(sizeTable, homeSize, services){
-  const cfg = sizeTable[homeSize];
-  const mult = ESTIMATE_RATES.serviceMultiplier[services];
-  if (!cfg || !mult) throw new Error('Missing rate inputs for this size/service combo');
-  const rate = ESTIMATE_RATES.ratePerCrewSize[cfg.crew];
-  const billableLow = Math.max(cfg.hoursLow, ESTIMATE_RATES.minimumHours);
-  const billableHigh = Math.max(cfg.hoursHigh, ESTIMATE_RATES.minimumHours);
-  const low = Math.round(billableLow * rate * mult / 10) * 10;
-  const high = Math.round(billableHigh * rate * mult / 10) * 10;
-  const average = Math.round((low + high) / 2 / 10) * 10;
-  return { low, average, high, crew: cfg.crew, hoursLow: billableLow, hoursHigh: billableHigh };
-}
-
-// Pure calculation — no DOM. Runs BEFORE the SmartMoving payload is built,
-// so the calculated numbers can be included in what gets sent to the CRM,
-// not just the raw inputs. Stores results on state.answers; returns them
-// too for convenience.
-function calculateEstimate(){
-  const { moveType, homeSize, services } = state.answers;
-  const isCommercial = state.answers.propertyType === 'commercial';
-  try {
-    let low, average, high, hoursLabel;
-    if (isCommercial){
-      const r = computeLocalRange(ESTIMATE_RATES.commercialBySize, homeSize, services);
-      low = r.low; average = r.average; high = r.high;
-      hoursLabel = `${r.crew} movers, ~${r.hoursLow}\u2013${r.hoursHigh} hours`;
-    } else if (moveType === 'long'){
-      const weight = ESTIMATE_RATES.weightLbsBySize[homeSize];
-      const mult = ESTIMATE_RATES.serviceMultiplier[services];
-      if (!weight || !mult) throw new Error('Missing long-distance rate inputs');
-      low = Math.round(weight * ESTIMATE_RATES.longDistanceRatePerLbLow * mult / 10) * 10;
-      high = Math.round(weight * ESTIMATE_RATES.longDistanceRatePerLbHigh * mult / 10) * 10;
-      average = Math.round((low + high) / 2 / 10) * 10;
-      hoursLabel = `~${weight.toLocaleString()} lbs`;
-    } else {
-      const r = computeLocalRange(ESTIMATE_RATES.localBySize, homeSize, services);
-      low = r.low; average = r.average; high = r.high;
-      hoursLabel = `${r.crew} movers, ~${r.hoursLow}\u2013${r.hoursHigh} hours (3-hour minimum applies)`;
-    }
-    state.answers.estimateLow = low;
-    state.answers.estimateAverage = average;
-    state.answers.estimateHigh = high;
-    state.answers.estimateDetail = hoursLabel;
-    return { ok: true, low, average, high, hoursLabel };
-  } catch (err){
-    console.error('[calculator] could not compute an estimate:', err);
-    state.answers.estimateLow = null;
-    state.answers.estimateAverage = null;
-    state.answers.estimateHigh = null;
-    state.answers.estimateDetail = null;
-    return { ok: false };
-  }
-}
-
-// Pure display — reads the numbers calculateEstimate() already stored on
-// state.answers and renders them. Does not recalculate anything.
+/* ---------------- Result ---------------- */
 function renderResult(){
-  const { moveType, homeSize, services, estimateLow, estimateAverage, estimateHigh, estimateDetail } = state.answers;
-  const isCommercial = state.answers.propertyType === 'commercial';
-  const rangeEl = document.getElementById('resultRange');
+  const a = state.answers;
+  const badgeEl = document.getElementById('resultBadge');
+  const titleEl = document.getElementById('resultTitle');
   const subEl = document.getElementById('resultSub');
+  const tiersEl = document.getElementById('resultTiers');
   const factorsEl = document.getElementById('resultFactors');
-  const lowEl = document.getElementById('resultLow');
-  const highEl = document.getElementById('resultHigh');
+  const disclaimerEl = document.getElementById('resultDisclaimer');
 
-  const sizeLabel = {studio:'Studio / 1 bed', '2bed':'2 bedrooms', '3bed':'3 bedrooms', '4bed':'4 bedrooms', '5bed':'5+ bedrooms'}[homeSize];
-  const commercialSizeLabel = {small:'Small (under 2,000 sq ft)', medium:'Medium (2,000\u201310,000 sq ft)', large:'Large (10,000+ sq ft)'};
-  const serviceLabel = {move:'Moving only', pack:'Moving + packing', storage:'Moving + packing + storage'}[services];
-  const moveTypeLabel = moveType === 'long' ? 'Long-distance' : 'Local';
+  const noticeEl = document.getElementById('resultNotice');
+  tiersEl.innerHTML = '';
+  noticeEl.style.display = 'none';
+  factorsEl.style.display = 'block';
 
-  if (estimateLow != null){
-    animateAverage(rangeEl, estimateAverage);
-    lowEl.textContent = '$' + estimateLow.toLocaleString();
-    highEl.textContent = '$' + estimateHigh.toLocaleString();
-    subEl.textContent = isCommercial
-      ? 'average estimate for your office/commercial move'
-      : (moveType === 'long' ? 'average estimate for your long-distance move' : 'average estimate for your local move');
-    factorsEl.innerHTML = `
-      <div><b>Move type:</b> ${moveTypeLabel}</div>
-      <div><b>${isCommercial ? 'Space size' : 'Home size'}:</b> ${isCommercial ? (commercialSizeLabel[homeSize] || homeSize) : sizeLabel}</div>
-      <div><b>Services:</b> ${serviceLabel}</div>
-      <div><b>${moveType === 'long' && !isCommercial ? 'Estimated shipment weight' : 'Estimated crew'}:</b> ${estimateDetail}</div>
-    `;
-    document.getElementById('resultDisclaimer').textContent = isCommercial
-      ? "This is a ballpark estimate based on typical office/commercial moves. We'll confirm exact scope during a walkthrough or virtual estimate."
-      : (moveType === 'long'
-        ? "This is a ballpark estimate based on typical shipment weights. Your final price is based on the actual weight once it's on the truck."
-        : "This is a ballpark estimate. Your final quote may vary once we confirm details \u2014 and once it's booked, your hourly rate is locked in, so there's no surprise charge later.");
-  } else {
-    rangeEl.textContent = "We'll follow up";
-    lowEl.textContent = '';
-    highEl.textContent = '';
-    subEl.textContent = "this one needs a specialist's eye";
-    factorsEl.innerHTML = `
-      <div style="margin-top:0;">We couldn't calculate a ballpark for this combination automatically &mdash; it looks like a special quote. No worries: your details are already on their way, and a Blue Ox specialist will be in touch shortly with an exact number.</div>
-    `;
-    document.getElementById('resultDisclaimer').textContent = '';
+  if (isCommercial()){
+    badgeEl.textContent = 'Request received';
+    titleEl.textContent = 'Custom quote';
+    subEl.textContent = 'office moves are scoped one at a time';
+    factorsEl.innerHTML = `<div>Commercial moves are done after hours and on weekends, and larger offices can take several days. A Blue Ox specialist will contact you to scope the job and give you an exact quote.</div>`;
+    disclaimerEl.textContent = '';
+    return;
   }
-}
 
-function animateAverage(el, value){
-  let frame = 0;
-  const frames = 20;
-  const timer = setInterval(() => {
-    frame++;
-    const v = Math.round(value * (frame/frames));
-    el.textContent = `$${v.toLocaleString()}`;
-    if (frame >= frames){
-      clearInterval(timer);
-      el.textContent = `$${value.toLocaleString()}`;
-    }
-  }, 35);
+  if (!a.tiers){
+    badgeEl.textContent = 'Details received';
+    titleEl.textContent = "We'll follow up";
+    subEl.textContent = "this one needs a specialist's eye";
+    factorsEl.innerHTML = `<div>We couldn't calculate an estimate for this move automatically. No worries: your details are already on their way, and a Blue Ox specialist will be in touch shortly with an exact number.</div>`;
+    disclaimerEl.textContent = '';
+    return;
+  }
+
+  noticeEl.style.display = 'block';
+  badgeEl.textContent = 'Estimate ready';
+  titleEl.textContent = 'Your estimate';
+  subEl.textContent = 'Starting prices for three levels of service';
+
+  const tiers = [
+    { name: 'Move only', desc: 'Loading, transport, and unloading', price: a.tiers.move },
+    { name: 'Move + packing', desc: 'We pack it, you don\u2019t touch a box. Packing materials billed in addition.', price: a.tiers.pack },
+    { name: 'Move + packing + storage', desc: `Everything above, plus secure vault storage. Storage is $${ESTIMATE_RATES.storagePerVaultPerMonth} per vault, per month; this price includes the first month of one vault.`, price: a.tiers.storage }
+  ];
+  tiersEl.innerHTML = tiers.map(t => `
+    <div class="tier">
+      <div>
+        <div class="t-name">${t.name}</div>
+        <div class="t-desc">${t.desc}</div>
+      </div>
+      <div class="t-price">
+        <span class="t-from">from</span>
+        <span class="t-amt">$${t.price.toLocaleString()}</span>
+      </div>
+    </div>
+  `).join('');
+
+  const sizeLabel = {studio:'Studio / 1 bed', '2bed':'2 bedrooms', '3bed':'3 bedrooms', '4bed':'4 bedrooms', '5bed':'5+ bedrooms'}[a.homeSize];
+  const d = a.estimateDetail;
+  let basis = `${d.crew} movers, ~${d.onsiteHours} hours on site`;
+  if (d.driveHours) basis += `, plus ~${d.driveHours} hours round-trip drive time`;
+
+  factorsEl.innerHTML = `
+    <div><b>Property:</b> ${a.propertyType === 'apartment' ? 'Apartment' : 'House'}</div>
+    <div><b>Move type:</b> ${a.moveType === 'long' ? 'Long-distance' : 'Local'}</div>
+    <div><b>Home size:</b> ${sizeLabel}</div>
+    <div><b>Moving crew:</b> ${basis}</div>
+  `;
+
+  disclaimerEl.textContent = "These are the lower end of what each option is likely to cost. Your final quote depends on your actual inventory, stairs, and access, and we'll confirm it before anything is booked.";
 }
 
 document.getElementById('finishBtn').addEventListener('click', () => {
-  // PRODUCTION: replace with a real redirect once a thank-you page
-  // URL exists, e.g. window.location.href = "/estimate-request-thank-you";
-  // The lead was already sent to SmartMoving back in the submitBtn
-  // handler, so this click is just "move on," not "submit."
+  // PRODUCTION: redirect to the thank-you page once a URL exists.
+  // The lead was already sent in the submit handler, so this is just "move on."
   showStep('ty');
 });
 </script>
