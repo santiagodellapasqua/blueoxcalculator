@@ -416,7 +416,10 @@ function captureAttributionOnce(){
 
   sessionStorage.setItem('bx_attribution', JSON.stringify({
     bucket, referrer: referrer || null, utmSource: utmSource || null,
-    utmMedium: utmMedium || null, capturedAt: new Date().toISOString()
+    utmMedium: utmMedium || null,
+    referrerHost: referrer ? (function(){ try { return new URL(referrer).hostname.replace(/^www\./, ''); } catch(e){ return null; } })() : null,
+    landingPage: window.location.pathname,
+    capturedAt: new Date().toISOString()
   }));
 }
 captureAttributionOnce();
@@ -632,21 +635,40 @@ function buildSmartMovingPayload(a){
       notesParts.push('Calculator could not compute an estimate (specialist follow-up message shown to customer)');
     }
   }
-  notesParts.push('Lead source: Moving Cost Calculator (not the main estimate-request form)');
 
   const attribution = getAttribution();
   // Confirm these strings match the referral sources already configured in
   // SmartMoving (Settings > Sales > Referral Sources); otherwise SmartMoving
   // auto-creates new, separate entries.
+  // Every lead from this tool is tagged "Website Calculator" so it can be told
+  // apart from the main estimate form (Gravity Forms #34) in SmartMoving reports.
+  // The traffic type is appended, giving seven possible values. Ask Blue Ox to
+  // pre-create all seven under Settings > Sales > Referral Sources, because a
+  // string that doesn't already exist creates a new entry.
   const referralSourceMap = {
-    'Organic Search': 'Website - Organic SEO',
-    'Paid Search': 'Website - Paid Search',
-    'Paid Social': 'Website - Paid Social',
-    'Organic Social': 'Website - Organic Social',
-    'Email': 'Website - Email',
-    'Referral': 'Website - Referral',
-    'Direct': 'Website - Direct'
+    'Organic Search': 'Website Calculator - Organic Search',
+    'Paid Search': 'Website Calculator - Paid Search',
+    'Paid Social': 'Website Calculator - Paid Social',
+    'Organic Social': 'Website Calculator - Organic Social',
+    'Email': 'Website Calculator - Email',
+    'Referral': 'Website Calculator - Referral',
+    'Direct': 'Website Calculator - Direct'
   };
+
+  // Medium and source values, GA4-style. Real UTM values from the URL always win;
+  // these are only used when the visit had no UTMs (organic, direct, referral).
+  const mediumMap = {
+    'Organic Search': 'organic', 'Paid Search': 'cpc', 'Paid Social': 'paid_social',
+    'Organic Social': 'social', 'Email': 'email', 'Referral': 'referral', 'Direct': '(none)'
+  };
+  const trafficMedium = attribution.utmMedium || mediumMap[attribution.bucket] || '(none)';
+  const trafficSource = attribution.utmSource || attribution.referrerHost || '(direct)';
+
+  // First line of the CRM notes, so the sales rep sees where the lead came from.
+  notesParts.unshift(
+    `SOURCE: Moving Cost Calculator | Traffic: ${attribution.bucket} (medium: ${trafficMedium}, source: ${trafficSource})`
+    + (attribution.landingPage ? ` | First landing page: ${attribution.landingPage}` : '')
+  );
 
   const payload = {
     fullName: a.name,
@@ -656,7 +678,7 @@ function buildSmartMovingPayload(a){
     originZip: a.zip,
     destinationZip: a.zipTo,
     serviceType: commercial ? 'Commercial' : 'Moving',
-    referralSource: referralSourceMap[attribution.bucket] || 'Website - Direct',
+    referralSource: referralSourceMap[attribution.bucket] || 'Website Calculator - Direct',
     notes: notesParts.join(' | ')
     // MoveDate intentionally omitted: SmartMoving's docs describe YYYYMMDD but
     // their own JSON sample shows "7/25/2020". Confirm the real format with
@@ -664,8 +686,10 @@ function buildSmartMovingPayload(a){
     // a fuzzy timeframe anyway, so it is captured in notes.
   };
   if (!commercial) payload.bedrooms = bedroomsMap[a.homeSize];
-  if (attribution.utmSource) payload.utmSource = attribution.utmSource;
-  if (attribution.utmMedium) payload.utmMedium = attribution.utmMedium;
+  // Always send a medium and source so organic, referral and direct leads are
+  // marked too. For visits with real UTMs these are the UTM values.
+  payload.utmMedium = trafficMedium;
+  payload.utmSource = trafficSource;
   return payload;
 }
 
